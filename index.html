@@ -190,6 +190,21 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
   z-index:20000!important;
 }
 </style>
+
+<style id="v95-announcements">
+.announcement-card{border:1px solid rgba(216,180,91,.22);background:linear-gradient(145deg,rgba(216,180,91,.08),rgba(255,255,255,.025))}
+.announcement-item{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.announcement-item:last-child{border-bottom:0}
+.announcement-title{font-weight:700;font-size:15px}
+.announcement-meta{font-size:12px;opacity:.68;margin-top:4px}
+.announcement-body{font-size:14px;line-height:1.5;margin-top:8px}
+.announcement-unread{border-left:3px solid var(--gold);padding-left:10px}
+.announcement-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--gold);color:#0a0c11;font-size:11px;font-weight:800;margin-left:6px}
+.announcement-form{display:grid;gap:10px;margin-top:12px}
+.announcement-form input,.announcement-form textarea,.announcement-form select{width:100%;box-sizing:border-box}
+.announcement-form textarea{min-height:110px;resize:vertical}
+</style>
+
 <script id="v92-menu-fix">
 (function(){
   function installMenuFix(){
@@ -224,6 +239,19 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
   }
 })();
 </script>
+
+
+<style id="v94-recurring-assignment">
+.workflow-note{
+  padding:11px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  font-size:13px;
+  line-height:1.45;
+}
+#saveAssignment{min-height:48px!important;touch-action:manipulation!important}
+</style>
 
 </head>
 <body>
@@ -622,17 +650,64 @@ async function employeeModal(id,allAssignments){
 }
 
 async function assignmentModal(empId){
+ const firstActive=restaurants.find(r=>r.active!==false);
  openModal(T('assign'),`
-  <div class="field"><label>${T('restaurants')}<select id="aRestaurant">${restaurants.filter(r=>r.active!==false).map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select></label></div>
-  <div class="field"><label>${T('workDate')}<input id="aDate" type="date" value="${localDate()}"></label></div>
+  <div class="notice" style="margin-bottom:10px">
+    Assigning a restaurant creates a recurring service schedule for the next 52 service weeks.
+  </div>
+  <div class="field"><label>${T('restaurants')}<select id="aRestaurant">${restaurants.filter(r=>r.active!==false).map(r=>`<option value="${r.id}">${esc(r.name)} • ${dayNames[r.weekday]} • ${fmtTime(r.start_time)}</option>`).join('')}</select></label></div>
+  <div class="field"><label>Start date<input id="aDate" type="date" value="${localDate()}"></label></div>
+  <div class="workflow-note" style="margin-top:8px">
+    The app will automatically create each upcoming service date for the selected restaurant. The employee will only see the restaurant when its scheduled weekday arrives.
+  </div>
   <button class="btn gold" id="saveAssignment">${T('assign')}</button>`);
  $('saveAssignment').onclick=async()=>{
-  const restaurant_id=$('aRestaurant').value,work_date=$('aDate').value;
-  if(!restaurant_id||!work_date)return;
-  const exists=await supabase.from('employee_assignments').select('id').eq('employee_id',empId).eq('restaurant_id',restaurant_id).eq('work_date',work_date).maybeSingle();
-  if(exists.data)return toast('Already assigned');
-  const {error}=await supabase.from('employee_assignments').insert({employee_id:empId,restaurant_id,work_date,status:'assigned'});
-  if(error)return toast(error.message);toast('Assignment saved');closeModal();await renderTeam();
+  const restaurant_id=$('aRestaurant').value,start=$('aDate').value;
+  if(!restaurant_id||!start)return toast('Restaurant and start date are required');
+
+  const restaurant=restaurants.find(r=>r.id===restaurant_id);
+  if(!restaurant)return toast('Restaurant not found');
+
+  const targetDay=Number(restaurant.weekday);
+  const startDate=new Date(start+'T12:00:00');
+  if(Number.isNaN(startDate.getTime()))return toast('Invalid start date');
+
+  // Find the first occurrence on/after the chosen start date that matches
+  // the restaurant's configured weekday, then create 52 weekly service rows.
+  const first=new Date(startDate);
+  const delta=(targetDay-first.getDay()+7)%7;
+  first.setDate(first.getDate()+delta);
+
+  const dates=[];
+  for(let i=0;i<52;i++){
+    const d=new Date(first);
+    d.setDate(first.getDate()+i*7);
+    dates.push(d.toISOString().slice(0,10));
+  }
+
+  const existing=await supabase.from('employee_assignments')
+    .select('work_date')
+    .eq('employee_id',empId)
+    .eq('restaurant_id',restaurant_id)
+    .in('work_date',dates);
+
+  if(existing.error)return toast(existing.error.message);
+  const have=new Set((existing.data||[]).map(x=>x.work_date));
+  const rows=dates.filter(d=>!have.has(d)).map(work_date=>({
+    employee_id:empId,
+    restaurant_id,
+    work_date,
+    status:'assigned'
+  }));
+
+  if(rows.length){
+    const {error}=await supabase.from('employee_assignments').insert(rows);
+    if(error)return toast(error.message);
+  }
+
+  toast(`Recurring assignment saved • ${dates.length} service weeks`);
+  closeModal();
+  await renderTeam();
  };
 }
 
@@ -730,133 +805,90 @@ supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;
 boot();
 </script>
 
-<style id="v93-employee-workflow">
-/* v9.3 — employee daily workflow polish; preserves v9.2 visual design */
-.employee-service-card{
-  border:1px solid rgba(216,180,91,.24);
-  background:linear-gradient(145deg,rgba(216,180,91,.08),rgba(255,255,255,.025));
-}
-.workflow-note{
-  margin-top:10px;
-  padding:11px 12px;
-  border-radius:12px;
-  background:rgba(255,255,255,.035);
-  border:1px solid rgba(255,255,255,.07);
-  font-size:13px;
-  line-height:1.45;
-}
-#clockBtn,#completeBtn{
-  min-height:48px!important;
-  touch-action:manipulation!important;
-}
-.task{
-  min-height:46px!important;
-  padding:10px 8px!important;
-}
-.task input{
-  width:22px!important;
-  height:22px!important;
-  flex:0 0 22px!important;
-}
-</style>
-<script id="v93-employee-workflow">
+<script id="v95-announcements-js">
 (function(){
-  const originalRenderHome = window.renderHome;
-  if(typeof originalRenderHome !== 'function') return;
+  async function loadAnnouncements(){
+    if(typeof supabase==='undefined') return [];
+    const {data,error}=await supabase.from('announcements')
+      .select('*')
+      .eq('active',true)
+      .order('created_at',{ascending:false});
+    if(error) return [];
+    return data||[];
+  }
 
-  // This wrapper runs after the existing v9.2 home renderer and only changes
-  // the employee presentation/flow. Supabase persistence remains unchanged.
-  window.renderHome = async function(){
-    await originalRenderHome();
+  function announcementAudienceVisible(a){
+    const role=(typeof profile!=='undefined'&&profile?.role)||'employee';
+    if(a.audience==='everyone') return true;
+    if(a.audience==='managers') return role==='manager'||role==='owner';
+    if(a.audience==='employees') return role==='employee';
+    return true;
+  }
 
-    if(!window.profile || window.profile.role !== 'employee') return;
+  window.renderAnnouncements=async function(){
+    const items=(await loadAnnouncements()).filter(announcementAudienceVisible);
+    const unread=items.length;
+    const rows=items.length ? items.map(a=>`
+      <div class="announcement-item">
+        <div class="announcement-title">${typeof esc==='function'?esc(a.title||'Announcement'):a.title||'Announcement'}</div>
+        <div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div>
+        <div class="announcement-body">${typeof esc==='function'?esc(a.body||''):a.body||''}</div>
+      </div>`).join('') : `<div class="muted">No announcements yet.</div>`;
 
-    const card = document.querySelector('#content .card.gold');
-    if(!card) return;
-
-    const clockBtn = document.getElementById('clockBtn');
-    const taskChecks = Array.from(document.querySelectorAll('[data-task]'));
-    const completeBtn = document.getElementById('completeBtn');
-    const clocked = !!clockBtn && /clock.?out/i.test(clockBtn.textContent || '');
-
-    // Add a clear instruction before the checklist when the employee has
-    // not started the service yet.
-    const checklistCard = Array.from(document.querySelectorAll('#content .card')).find(el =>
-      el.querySelector('.progress') && el.querySelector('[data-task]')
-    );
-
-    if(checklistCard && !clocked){
-      const note=document.createElement('div');
-      note.className='workflow-note';
-      note.innerHTML='<strong>Service not started</strong><br>Clock in above to begin today\\'s cleaning checklist.';
-      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',note);
-      taskChecks.forEach(x=>x.disabled=true);
-      if(completeBtn) completeBtn.disabled=true;
-    }
-
-    // Once clocked in, make the workflow state explicit.
-    if(checklistCard && clocked){
-      const note=document.createElement('div');
-      note.className='workflow-note';
-      note.innerHTML='<strong>Service in progress</strong><br>Complete every checklist item before finishing the job.';
-      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',note);
-    }
-
-    // Prevent accidental clock-out before all checklist items are complete.
-    if(clockBtn && clocked){
-      clockBtn.addEventListener('click',function(e){
-        const incomplete=taskChecks.some(x=>!x.checked);
-        if(incomplete){
-          e.preventDefault();
-          e.stopImmediatePropagation();
-          if(typeof toast==='function') toast('Finish the checklist before clocking out.');
-        }
-      },true);
-    }
+    return `<section class="card announcement-card">
+      <div class="section-head">
+        <div><div class="eyebrow">UPDATES</div><h3>Announcements ${unread?`<span class="announcement-badge">${unread}</span>`:''}</h3></div>
+      </div>
+      ${rows}
+    </section>`;
   };
-})();
-</script>
 
-<script id="v93-post-render-hook">
-(function(){
-  function employeePostRender(){
-    if(typeof profile==='undefined' || profile?.role!=='employee') return;
-    const content=document.getElementById('content');
-    if(!content) return;
+  window.ownerAnnouncements=async function(){
+    const role=(typeof profile!=='undefined'&&profile?.role)||'';
+    if(role!=='owner') return toast('Owner access only');
 
-    const clockBtn=document.getElementById('clockBtn');
-    const checks=[...content.querySelectorAll('[data-task]')];
-    const complete=document.getElementById('completeBtn');
-    const clocked=!!clockBtn && /clock.?out/i.test(clockBtn.textContent||'');
+    const items=await loadAnnouncements();
+    const rows=items.map(a=>`
+      <div class="announcement-item">
+        <div class="announcement-title">${esc(a.title||'Announcement')}</div>
+        <div class="announcement-meta">${String(a.priority||'normal').toUpperCase()} • ${a.audience||'everyone'} • ${new Date(a.created_at).toLocaleDateString()}</div>
+        <div class="announcement-body">${esc(a.body||'')}</div>
+      </div>`).join('');
 
-    const checklistCard=[...content.querySelectorAll('.card')].find(x=>x.querySelector('.progress')&&x.querySelector('[data-task]'));
-    if(!checklistCard) return;
+    openModal('Announcements',`
+      <div class="announcement-form">
+        <input id="annTitle" placeholder="Title">
+        <textarea id="annBody" placeholder="Write your announcement..."></textarea>
+        <select id="annAudience">
+          <option value="everyone">Everyone</option>
+          <option value="employees">Employees</option>
+          <option value="managers">Managers</option>
+        </select>
+        <select id="annPriority">
+          <option value="normal">Normal</option>
+          <option value="important">Important</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <button class="btn gold" id="publishAnnouncement">Publish Announcement</button>
+      </div>
+      <div style="margin-top:18px">${rows||'<div class="muted">No announcements yet.</div>'}</div>`);
 
-    if(!clocked){
-      checks.forEach(x=>x.disabled=true);
-      if(complete) complete.disabled=true;
-      if(!checklistCard.querySelector('.workflow-note')){
-        const n=document.createElement('div');
-        n.className='workflow-note';
-        n.innerHTML='<strong>Service not started</strong><br>Clock in above to begin today\\'s cleaning checklist.';
-        checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',n);
-      }
-    }else if(!checklistCard.querySelector('.workflow-note')){
-      const n=document.createElement('div');
-      n.className='workflow-note';
-      n.innerHTML='<strong>Service in progress</strong><br>Complete every checklist item before finishing the job.';
-      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',n);
-    }
-  }
-
-  const oldRender=window.render;
-  if(typeof oldRender==='function'){
-    window.render=async function(){
-      const result=await oldRender.apply(this,arguments);
-      setTimeout(employeePostRender,0);
-      return result;
+    $('publishAnnouncement').onclick=async()=>{
+      const title=$('annTitle').value.trim(),body=$('annBody').value.trim();
+      if(!title||!body)return toast('Title and message are required');
+      const {error}=await supabase.from('announcements').insert({
+        title,body,
+        audience:$('annAudience').value,
+        priority:$('annPriority').value,
+        active:true,
+        created_by:profile.id
+      });
+      if(error)return toast(error.message);
+      toast('Announcement published');
+      closeModal();
+      if(typeof render==='function') await render();
     };
-  }
+  };
 })();
 </script>
 
