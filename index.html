@@ -1,0 +1,121 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#152238">
+<link rel="manifest" href="manifest.json">
+<title>Cleaning Ops</title>
+<style>
+:root{--navy:#152238;--bg:#f4f6f8;--card:#fff;--muted:#697586;--line:#e2e7ec;--green:#278653}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:#172033}
+.app{max-width:540px;margin:auto;min-height:100vh}.hero{background:var(--navy);color:#fff;padding:28px 18px 20px;border-radius:0 0 24px 24px}.eyebrow{font-size:11px;letter-spacing:1.4px;opacity:.72}.hero h1{margin:6px 0 4px;font-size:29px}.hero p{margin:0;opacity:.78}.main{padding:16px 15px 90px}.card{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:16px;margin-bottom:13px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.muted{color:var(--muted);font-size:13px}.badge{background:#eaf5ee;color:#216b43;border-radius:999px;padding:7px 10px;font-size:12px;font-weight:750}.btn{border:0;border-radius:12px;min-height:44px;padding:11px 15px;font-weight:750;background:var(--navy);color:#fff}.btn.alt{background:#edf1f5;color:var(--navy)}.btn.green{background:var(--green)}.full{width:100%}.field{margin:12px 0}.field label{display:block;font-size:13px;font-weight:700}.field input,.field select{width:100%;margin-top:6px;padding:12px;border:1px solid var(--line);border-radius:11px;font-size:16px;background:#fff}.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.task{display:flex;gap:12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--line)}.task:last-child{border-bottom:0}.task input{width:21px;height:21px;accent-color:var(--green)}.task.done span{text-decoration:line-through;color:#8a94a3}.progress{height:8px;background:#e8ecf0;border-radius:8px;overflow:hidden;margin:12px 0}.bar{height:100%;width:0;background:var(--green);transition:.2s}.photo{border:1px dashed #adb7c3;border-radius:14px;padding:15px;margin-top:10px}.photo input{width:100%;margin-top:10px}.thumb{max-width:100%;max-height:180px;border-radius:10px;margin-top:10px;display:none}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(540px,100%);display:flex;justify-content:space-around;background:#fff;border-top:1px solid var(--line);padding:9px 5px calc(9px + env(safe-area-inset-bottom));z-index:4}.nav button{border:0;background:none;color:var(--muted);font-size:11px;font-weight:700;padding:6px 12px}.nav button.active{color:var(--navy)}.nav b{display:block;font-size:18px}.hidden{display:none!important}.day{padding:13px 0;border-bottom:1px solid var(--line)}.day:last-child{border:0}.danger{color:#a33}.small{font-size:12px}
+</style>
+</head>
+<body>
+<div class="app">
+<header class="hero">
+<div class="eyebrow">RESTAURANT CLEANING MANAGEMENT</div>
+<h1>Cleaning Ops</h1>
+<p id="heroSub">Manager & employee operations</p>
+</header>
+
+<main class="main">
+<section id="login">
+<div class="card">
+<h2 style="margin-top:0">Sign in</h2>
+<p class="muted">Choose the account type for this demo.</p>
+<div class="field"><label>Name<input id="name" placeholder="e.g. Maria"></label></div>
+<div class="grid">
+<button class="btn full" data-login="manager">Manager</button>
+<button class="btn alt full" data-login="employee">Employee</button>
+</div>
+<p class="muted small">Demo accounts are local to this device. A production version will use secure accounts and cloud storage.</p>
+</div>
+</section>
+
+<section id="app" class="hidden">
+<div id="dashboard"></div>
+<div id="availability" class="hidden"></div>
+<div id="photos" class="hidden"></div>
+<div id="employees" class="hidden"></div>
+</section>
+</main>
+
+<nav id="nav" class="nav hidden"></nav>
+</div>
+
+<script>
+const schedule=[
+ {day:"Monday",place:"Covington",time:"4:00 AM"},
+ {day:"Tuesday",place:"Highland",time:"5:00 AM"},
+ {day:"Wednesday",place:"East",time:"5:00 AM"},
+ {day:"Thursday",place:"Lafayette",time:"4:00 AM"},
+ {day:"Friday",place:"Parrains",time:"5:00 AM"}
+];
+const tasks=["Grills / Parrillas","Fryers","Hoods","Floors","Equipment","Walls","Trash Area","Final Inspection"];
+const availability=schedule.map(x=>({...x,available:true}));
+let role="",user="",tab="dashboard";
+let checks=JSON.parse(localStorage.getItem("co_checks")||"[]");
+if(checks.length!==tasks.length) checks=tasks.map(()=>false);
+let jobPhotoNames=JSON.parse(localStorage.getItem("co_photos")||'{"before":"","after":""}');
+
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem("co_checks",JSON.stringify(checks));localStorage.setItem("co_photos",JSON.stringify(jobPhotoNames))}
+function login(r){
+ user=($("name").value||"User").trim(); role=r;
+ $("login").classList.add("hidden");$("app").classList.remove("hidden");$("nav").classList.remove("hidden");
+ $("nav").innerHTML=r==="manager"
+  ? '<button data-tab="dashboard"><b>⌂</b>Dashboard</button><button data-tab="availability"><b>◷</b>Availability</button><button data-tab="employees"><b>👥</b>Employees</button><button data-tab="photos"><b>▣</b>Photos</button>'
+  : '<button data-tab="dashboard"><b>⌂</b>My Job</button><button data-tab="availability"><b>◷</b>My Availability</button><button data-tab="photos"><b>▣</b>My Photos</button>';
+ document.querySelectorAll("#nav [data-tab]").forEach(b=>b.onclick=()=>show(b.dataset.tab));
+ show("dashboard");
+}
+function show(t){
+ tab=t;["dashboard","availability","photos","employees"].forEach(x=>$(x).classList.toggle("hidden",x!==t));
+ document.querySelectorAll("#nav button").forEach(b=>b.classList.toggle("active",b.dataset.tab===t));
+ render();
+}
+function render(){
+ $("heroSub").textContent=(role==="manager"?"Manager":"Employee")+" • "+user;
+ if(tab==="dashboard") renderDash();
+ if(tab==="availability") renderAvailability();
+ if(tab==="photos") renderPhotos();
+ if(tab==="employees") renderEmployees();
+}
+function renderDash(){
+ const s=schedule[0], done=checks.filter(Boolean).length, pct=Math.round(done/tasks.length*100);
+ $("dashboard").innerHTML=role==="manager"
+ ? `<div class="card"><div class="row"><div><div class="muted">TODAY</div><h2 style="margin:4px 0">${s.place}</h2><div class="muted">${s.day} • ${s.time}</div></div><span class="badge">${pct===100?"Complete":"Active"}</span></div><div class="progress"><div class="bar" style="width:${pct}%"></div></div><div class="muted">${done}/${tasks.length} tasks completed</div></div>
+    <div class="card"><h3 style="margin-top:0">Today's Assignment</h3><div class="row"><span>Assigned employee</span><strong>${user}</strong></div><div class="row" style="margin-top:10px"><span>Before photo</span><span class="badge">${jobPhotoNames.before?"Submitted":"Pending"}</span></div><div class="row" style="margin-top:10px"><span>After photo</span><span class="badge">${jobPhotoNames.after?"Submitted":"Pending"}</span></div></div>
+    <div class="card"><h3 style="margin-top:0">Checklist Status</h3>${tasks.map((x,i)=>`<div class="task"><input type="checkbox" ${checks[i]?"checked":""} disabled><span>${x}</span></div>`).join("")}</div>`
+ : `<div class="card"><div class="row"><div><div class="muted">TODAY'S JOB</div><h2 style="margin:4px 0">${s.place}</h2><div class="muted">${s.day} • ${s.time}</div></div><span class="badge">Assigned to you</span></div><div class="progress"><div class="bar" style="width:${pct}%"></div></div><div class="muted">${done}/${tasks.length} completed</div></div>
+    <div class="card"><h3 style="margin-top:0">Cleaning Checklist</h3>${tasks.map((x,i)=>`<label class="task ${checks[i]?"done":""}"><input type="checkbox" data-task="${i}" ${checks[i]?"checked":""}><span>${x}</span></label>`).join("")}<button id="complete" class="btn green full" style="margin-top:14px" ${done<tasks.length?"disabled":""}>Complete Job</button></div>`;
+ document.querySelectorAll("[data-task]").forEach(c=>c.onchange=e=>{checks[+e.target.dataset.task]=e.target.checked;save();render()});
+ const complete=$("complete");if(complete)complete.onclick=()=>alert("Job marked complete.");
+}
+function renderAvailability(){
+ $("availability").innerHTML=`<div class="card"><h2 style="margin-top:0">${role==="manager"?"Employee Availability":"My Availability"}</h2><p class="muted">${role==="manager"?"Review availability submitted by employees.":"Choose the days you are available to receive assignments."}</p>${availability.map((s,i)=>`<label class="task"><input type="checkbox" data-av="${i}" ${s.available?"checked":""} ${role==="manager"?"disabled":""}><span><strong>${s.day}</strong><br><span class="muted">${s.place} • ${s.time}</span></span></label>`).join("")}${role==="employee"?'<button id="saveAv" class="btn full" style="margin-top:14px">Save Availability</button>':'<div class="card" style="margin-top:14px;background:#f7f8fa"><strong>Maria</strong><p class="muted">Mon–Fri • Available</p></div>'}</div>`;
+ document.querySelectorAll("[data-av]").forEach(c=>c.onchange=e=>availability[+e.target.dataset.av].available=e.target.checked);
+ const b=$("saveAv");if(b)b.onclick=()=>alert("Availability saved on this device.");
+}
+function renderPhotos(){
+ $("photos").innerHTML=role==="employee"
+ ? `<div class="card"><h2 style="margin-top:0">Before & After Photos</h2><p class="muted">For today's Covington job. Select a photo from the phone or take one with the camera.</p>
+   <div class="photo"><strong>📷 Before Cleaning</strong><input id="before" type="file" accept="image/*" capture="environment"><div class="muted" id="beforeName">${jobPhotoNames.before||"No photo selected"}</div></div>
+   <div class="photo"><strong>📷 After Cleaning</strong><input id="after" type="file" accept="image/*" capture="environment"><div class="muted" id="afterName">${jobPhotoNames.after||"No photo selected"}</div></div>
+   <button id="savePhotos" class="btn green full" style="margin-top:14px">Submit Photos</button></div>`
+ : `<div class="card"><h2 style="margin-top:0">Photo Review</h2><div class="row"><strong>Covington</strong><span class="badge">${jobPhotoNames.before&&jobPhotoNames.after?"Complete":"Pending"}</span></div><p class="muted">Employee: Cleaning Staff</p><div class="photo">Before: <strong>${jobPhotoNames.before||"Not submitted"}</strong></div><div class="photo">After: <strong>${jobPhotoNames.after||"Not submitted"}</strong></div><p class="muted small">Production version will store and display the actual images in secure cloud storage.</p></div>`;
+ const b=$("before"),a=$("after"),saveBtn=$("savePhotos");
+ if(b)b.onchange=()=>{jobPhotoNames.before=b.files[0]?.name||"";$("beforeName").textContent=jobPhotoNames.before||"No photo selected"};
+ if(a)a.onchange=()=>{jobPhotoNames.after=a.files[0]?.name||"";$("afterName").textContent=jobPhotoNames.after||"No photo selected"};
+ if(saveBtn)saveBtn.onclick=()=>{save();alert("Photos submitted in this prototype.");};
+}
+function renderEmployees(){
+ $("employees").innerHTML=`<div class="card"><h2 style="margin-top:0">Employees</h2><div class="card" style="margin:0;background:#f7f8fa"><div class="row"><div><strong>Cleaning Staff</strong><div class="muted">Employee account</div></div><span class="badge">Available</span></div></div><button class="btn full" style="margin-top:12px" onclick="alert('The production version will let you invite employees and create secure logins.')">+ Add Employee</button></div>
+ <div class="card"><h3 style="margin-top:0">This Week</h3>${schedule.map(s=>`<div class="day"><div class="row"><strong>${s.day}</strong><span class="badge">${s.time}</span></div><div class="muted">${s.place}</div></div>`).join("")}</div>`;
+}
+document.querySelectorAll("[data-login]").forEach(b=>b.onclick=()=>login(b.dataset.login));
+</script>
+</body>
+</html>
