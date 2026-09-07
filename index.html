@@ -488,6 +488,7 @@ async function loadToday(){
 
 async function renderHome(){
  await loadToday();
+ const announcements=(await loadAnnouncements()).filter(visibleAnnouncement);
  const r=todayRestaurant();
  if(!r){
   $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('today')}</div><h1>${T('noRestaurant')}</h1></div>
@@ -503,6 +504,11 @@ async function renderHome(){
   <div class="statcard"><div class="statlabel">${T('assignment')}</div><div class="statvalue">${assignment?'1':'0'}</div></div>
   <div class="statcard"><div class="statlabel">${isManagement()?T('employees'):T('hours')}</div><div class="statvalue">${isManagement()?employees.length:(clocked?'ON':'—')}</div></div>
  </div>
+ <div class="card announcement-card" style="margin-top:9px">
+   <div class="row"><div><div class="tiny">ANNOUNCEMENTS</div><h2 style="margin-top:4px">Company Updates</h2></div>${isManagement()?`<button class="btn small gold" id="manageAnnouncements" type="button">Post</button>`:''}</div>
+   <div class="announcement-list">${announcements.slice(0,3).map(a=>`<div class="announcement-item"><div class="announcement-title">${esc(a.title||'Announcement')}</div><div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div><div class="announcement-body">${esc(a.body||'')}</div></div>`).join('')||`<div class="muted">No announcements yet.</div>`}</div>
+   ${announcements.length>3?`<button class="btn secondary" id="viewAllAnnouncements" style="margin-top:10px" type="button">View All Announcements</button>`:''}
+ </div>
  <div class="card ${assignment?'gold':''}" style="margin-top:9px">
    <div class="row"><div><div class="tiny">${T('assignment')}</div><div style="font-size:15px;font-weight:750;margin-top:4px">${assignment?esc(isManagement()?(employees.find(e=>e.id===assignment.employee_id)?.full_name||'Employee'):(r.name)):T('notAssigned')}</div></div>
    ${assignment?`<span class="badge">${esc(assignment.status||'assigned')}</span>`:''}</div>
@@ -515,6 +521,8 @@ async function renderHome(){
   ${tasks.map(x=>`<label class="task ${x.completed?'done':''}"><input type="checkbox" data-task="${x.id}" ${x.completed?'checked':''} ${isManagement()?'disabled':''}><span>${esc(x.task_name)}</span></label>`).join('')}
   ${!isManagement()?`<button class="btn ${pct===100?'gold':''}" id="completeBtn" style="margin-top:10px" ${pct<100?'disabled':''}>${T('complete')}</button>`:''}
  </div>`:`<div class="card"><div class="tiny">${T('assignment')}</div><h2>${T('notAssigned')}</h2><p>${isManagement()?'Assign an employee from Team.':'Your manager has not assigned you to today’s restaurant yet.'}</p></div>`}`;
+ if($('manageAnnouncements'))$('manageAnnouncements').onclick=showAnnouncements;
+ if($('viewAllAnnouncements'))$('viewAllAnnouncements').onclick=showAnnouncements;
  if($('clockBtn'))$('clockBtn').onclick=clockToggle;
  if($('completeBtn'))$('completeBtn').onclick=completeJob;
  if($('openTeam'))$('openTeam').onclick=()=>showTab('team');
@@ -805,9 +813,9 @@ function visibleAnnouncement(a){if(a.audience==='everyone')return true;if(a.audi
 async function showAnnouncements(){
  const items=(await loadAnnouncements()).filter(visibleAnnouncement);
  const rows=items.length?items.map(a=>`<div class="announcement-item"><div class="announcement-title">${esc(a.title||'Announcement')}</div><div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div><div class="announcement-body">${esc(a.body||'')}</div></div>`).join(''):`<div class="muted">No announcements yet.</div>`;
- const ownerForm=profile?.role==='owner'?`<div class="announcement-compose"><input id="annTitleOnly" placeholder="Title"><textarea id="annBodyOnly" placeholder="Write your announcement..."></textarea><select id="annAudienceOnly"><option value="everyone">Everyone</option><option value="employees">Employees</option><option value="managers">Managers</option></select><select id="annPriorityOnly"><option value="normal">Normal</option><option value="important">Important</option><option value="urgent">Urgent</option></select><button class="btn gold" id="publishAnnouncementOnly" type="button">Publish Announcement</button></div>`:'';
+ const ownerForm=isManagement()?`<div class="announcement-compose"><input id="annTitleOnly" placeholder="Title"><textarea id="annBodyOnly" placeholder="Write your announcement..."></textarea><select id="annPriorityOnly"><option value="normal">Normal</option><option value="important">Important</option><option value="urgent">Urgent</option></select><button class="btn gold" id="publishAnnouncementOnly" type="button">Publish for Everyone</button></div>`:'';
  openModal('ANNOUNCEMENTS',`<section class="card announcement-card">${ownerForm}<div class="announcement-list" style="margin-top:14px">${rows}</div></section>`);
- const publish=$('publishAnnouncementOnly'); if(publish)publish.onclick=async()=>{const title=$('annTitleOnly').value.trim(),body=$('annBodyOnly').value.trim();if(!title||!body)return toast('Title and message are required');const {error}=await supabase.from('announcements').insert({title,body,audience:$('annAudienceOnly').value,priority:$('annPriorityOnly').value,active:true,created_by:profile.id});if(error)return toast(error.message);toast('Announcement published');await showAnnouncements()};
+ const publish=$('publishAnnouncementOnly'); if(publish)publish.onclick=async()=>{const title=$('annTitleOnly').value.trim(),body=$('annBodyOnly').value.trim();if(!title||!body)return toast('Title and message are required');const {error}=await supabase.from('announcements').insert({title,body,audience:'everyone',priority:$('annPriorityOnly').value,active:true,created_by:profile.id});if(error)return toast(error.message);toast('Announcement published for everyone');await showAnnouncements()};
 }
 $('announcementsBtn').onclick=showAnnouncements;
 
