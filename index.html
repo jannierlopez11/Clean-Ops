@@ -519,9 +519,20 @@ async function loadToday(){
  const t=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
  tasks=t.data||[];
  if(!tasks.length){
-   const temp=await supabase.from('task_templates').select('name').eq('active',true).order('sort_order');
-   if(temp.data?.length){
-     await supabase.from('checklist_tasks').insert(temp.data.map(x=>({assignment_id:assignment.id,task_name:x.name,completed:false})));
+   // Build today's checklist from the restaurant-specific configuration.
+   const cfg=await supabase.from('restaurant_checklist_config').select('checklist_item_id,sort_order').eq('restaurant_id',r.id).eq('active',true).order('sort_order');
+   const ids=(cfg.data||[]).map(x=>x.checklist_item_id).filter(Boolean);
+   let names=[];
+   if(ids.length){
+     const ci=await supabase.from('checklist_items').select('id,name,description').in('id',ids).eq('active',true);
+     const byId={};(ci.data||[]).forEach(x=>byId[x.id]=x);
+     names=(cfg.data||[]).map(x=>byId[x.checklist_item_id]).filter(Boolean).map(x=>x.name);
+   }
+   // Bathrooms are mandatory on every service day.
+   const rb=await supabase.from('restaurant_bathrooms').select('name,toilet_count,urinal_count,sink_count').eq('restaurant_id',r.id).eq('active',true).order('name');
+   (rb.data||[]).forEach(b=>names.push(`Bathroom — ${b.name||'Bathroom'}`));
+   if(names.length){
+     await supabase.from('checklist_tasks').insert(names.map(name=>({assignment_id:assignment.id,task_name:name,completed:false})));
      const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
      tasks=tt.data||[];
    }
@@ -1029,6 +1040,52 @@ if(document.readyState==='loading'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install98);
   else install98();
 })();
+</script>
+
+
+
+<style id="v912-checklist">
+.check-setup-grid{display:grid;gap:10px}.check-restaurant{border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.025)}
+.check-restaurant-head{padding:13px;display:flex;justify-content:space-between;align-items:center}.check-restaurant-body{padding:0 13px 13px;display:grid;gap:8px}
+.check-choice{display:flex;align-items:flex-start;gap:9px;padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:10px}.check-choice input{margin-top:3px;accent-color:var(--gold)}
+.check-choice small{display:block;opacity:.62;margin-top:2px}.check-savebar{position:sticky;bottom:0;padding-top:10px;background:linear-gradient(transparent,var(--bg) 35%)}
+</style>
+<script type="module" id="v912-checklist-module">
+import { createClient as createChecklistClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const cs=createChecklistClient('https://uwfoqbyejrfrgiwftvli.supabase.co','sb_publishable_fKXaIcoTfnQ8joXp3VM_YA_1u82btt1');
+const ce=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+async function cp(){const {data:{user}}=await cs.auth.getUser();if(!user)return null;const {data}=await cs.from('profiles').select('id,role,active').eq('id',user.id).maybeSingle();return data||null}
+async function openChecklistSetup(){
+ const p=await cp();if(!p||!['owner','manager'].includes(p.role))return;
+ const [r,c,i,b]=await Promise.all([
+  cs.from('restaurants').select('id,name,weekday,start_time,active').eq('active',true).order('weekday'),
+  cs.from('checklist_categories').select('id,name,sort_order').eq('active',true).order('sort_order'),
+  cs.from('checklist_items').select('id,category_id,name,description,sort_order').eq('active',true).order('sort_order'),
+  cs.from('restaurant_bathrooms').select('restaurant_id,name,toilet_count,urinal_count,sink_count').eq('active',true).order('name')
+ ]);
+ if(r.error||c.error||i.error||b.error)return alert((r.error||c.error||i.error||b.error).message);
+ const restaurants=r.data||[], cats=c.data||[], items=i.data||[], baths=b.data||[];
+ const configs=await Promise.all(restaurants.map(async x=>{const q=await cs.from('restaurant_checklist_config').select('checklist_item_id,sort_order').eq('restaurant_id',x.id).eq('active',true).order('sort_order');return [x.id,q.data||[]]}));
+ const map=Object.fromEntries(configs);
+ const body=`<p class="muted">Choose exactly which cleaning tasks apply to each restaurant. Bathrooms are always mandatory.</p><div class="check-setup-grid">${restaurants.map(rest=>{
+  const chosen=new Set((map[rest.id]||[]).map(x=>x.checklist_item_id));
+  const rb=baths.filter(x=>x.restaurant_id===rest.id);
+  return `<div class="check-restaurant"><div class="check-restaurant-head"><div><b>${ce(rest.name)}</b><div class="muted">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][rest.weekday]||''} • ${ce(rest.start_time||'')}</div></div><span class="badge">${chosen.size} tasks</span></div><div class="check-restaurant-body">${cats.map(cat=>{const its=items.filter(x=>x.category_id===cat.id);if(!its.length)return '';return `<div class="tiny" style="margin-top:3px">${ce(cat.name)}</div>${its.map(it=>`<label class="check-choice"><input type="checkbox" class="rc-item" data-rid="${rest.id}" data-iid="${it.id}" ${chosen.has(it.id)?'checked':''}><span><b>${ce(it.name)}</b>${it.description?`<small>${ce(it.description)}</small>`:''}</span></label>`).join('')}`}).join('')}<div class="check-choice"><span>🚻</span><span><b>Bathrooms — Mandatory</b><small>${rb.length?rb.map(x=>ce(x.name||'Bathroom')).join(' • '):'No bathroom configured yet'}</small></span></div></div></div>`;
+ }).join('')}</div><div class="check-savebar"><button class="btn gold" id="saveChecklistConfig">Save Restaurant Checklists</button></div>`;
+ const modal=document.getElementById('modal'),title=document.getElementById('modalTitle'),mb=document.getElementById('modalBody');title.textContent='CHECKLIST SETUP';mb.innerHTML=body;modal.classList.add('open');
+ document.getElementById('saveChecklistConfig').onclick=async()=>{
+  const btn=document.getElementById('saveChecklistConfig');btn.disabled=true;
+  for(const rest of restaurants){
+   const checked=[...document.querySelectorAll(`.rc-item[data-rid="${rest.id}"]:checked`)].map((x,n)=>({restaurant_id:rest.id,checklist_item_id:x.dataset.iid,active:true,sort_order:n}));
+   const del=await cs.from('restaurant_checklist_config').delete().eq('restaurant_id',rest.id);if(del.error){btn.disabled=false;return alert(del.error.message)}
+   if(checked.length){const ins=await cs.from('restaurant_checklist_config').insert(checked);if(ins.error){btn.disabled=false;return alert(ins.error.message)}}
+  }
+  btn.disabled=false;modal.classList.remove('open');alert('Restaurant checklists saved.');
+ };
+}
+window.openChecklistSetup=openChecklistSetup;
+function addButton(){const drawer=document.getElementById('drawer');if(!drawer||document.getElementById('checklistSetupBtn'))return;const cards=drawer.querySelectorAll('.card');const c=cards[2];if(!c)return;const b=document.createElement('button');b.id='checklistSetupBtn';b.className='btn secondary';b.type='button';b.textContent='Checklist Setup';b.style.marginTop='8px';b.onclick=()=>{drawer.classList.remove('open');openChecklistSetup()};c.appendChild(b)}
+addButton();setTimeout(addButton,500);setInterval(addButton,1500);
 </script>
 
 </body>
