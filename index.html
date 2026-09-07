@@ -300,12 +300,10 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
 </style>
 
 
-<style id="v914-ios-safe-header">
-.topbar{padding-top:max(12px, env(safe-area-inset-top))!important; height:auto!important; min-height:76px!important; box-sizing:border-box!important;}
-@media(max-width:680px){.topbar{padding-top:max(12px, env(safe-area-inset-top))!important;padding-bottom:8px!important;}}
-</style>
-
-<style id="v914-ann-delete">[data-delete-announcement]{min-height:34px!important;padding:6px 10px!important;font-size:9px!important;}
+<style id="v915-safe-header">
+/* v9.15: safe iPhone header spacing only. No app logic changed. */
+.topbar{padding-top:calc(12px + env(safe-area-inset-top, 0px))!important;box-sizing:border-box!important;min-height:76px!important;height:auto!important;}
+@media(min-width:681px){.topbar{padding-top:12px!important;min-height:76px!important;}}
 </style>
 </head>
 <body>
@@ -348,6 +346,10 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
       <h3>UPDATES</h3>
       <button class="btn secondary" id="announcementsBtn" type="button">Announcements</button>
       <span id="announcementMenuBadge" class="announcement-badge" style="display:none">0</span>
+      <div id="managementTools" style="display:none;grid-template-columns:1fr;gap:8px;margin-top:8px">
+        <button class="btn secondary" id="timeTrackingBtn" type="button">Time Tracking</button>
+        <button class="btn secondary" id="jobPhotosBtn" type="button">Job Photos</button>
+      </div>
     </div>
     <div class="card">
       <h3>ACCOUNT</h3>
@@ -497,10 +499,11 @@ function renderShell(){
  $('topMeta').textContent=`${roleLabel()} • ${profile.full_name||session.user.email}`;
  $('drawerName').textContent=profile.full_name||'—';$('drawerEmail').textContent=session.user.email||'';
  $('drawerRole').innerHTML=`<span class="badge ${profile.active===false?'off':''}">${esc(roleLabel())}</span>`;
+ $('managementTools').style.display=isManagement()?'grid':'none';
  $('bottomNav').innerHTML=`
  <button data-tab="home"><span class="navline"></span>${T('home')}</button>
  <button data-tab="schedule"><span class="navline"></span>${T('schedule')}</button>
- ${isManagement()?`<button data-tab="team"><span class="navline"></span>${T('team')}</button>`:''}
+ ${isManagement()?`<><button data-tab="team"><span class="navline"></span>${T('team')}</button><button data-tab="history"><span class="navline"></span>${T('history')}</button></>`:''}
  <button data-tab="work"><span class="navline"></span>${T('work')}</button>`;
  $('bottomNav').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 }
@@ -509,6 +512,7 @@ async function render(){
  if(tab==='home')await renderHome();
  if(tab==='schedule')await renderSchedule();
  if(tab==='team')await renderTeam();
+ if(tab==='history')await renderHistory();
  if(tab==='work')await renderWork();
 }
 
@@ -526,9 +530,20 @@ async function loadToday(){
  const t=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
  tasks=t.data||[];
  if(!tasks.length){
-   const temp=await supabase.from('task_templates').select('name').eq('active',true).order('sort_order');
-   if(temp.data?.length){
-     await supabase.from('checklist_tasks').insert(temp.data.map(x=>({assignment_id:assignment.id,task_name:x.name,completed:false})));
+   // Build today's checklist from the restaurant-specific configuration.
+   const cfg=await supabase.from('restaurant_checklist_config').select('checklist_item_id,sort_order').eq('restaurant_id',r.id).eq('active',true).order('sort_order');
+   const ids=(cfg.data||[]).map(x=>x.checklist_item_id).filter(Boolean);
+   let names=[];
+   if(ids.length){
+     const ci=await supabase.from('checklist_items').select('id,name,description').in('id',ids).eq('active',true);
+     const byId={};(ci.data||[]).forEach(x=>byId[x.id]=x);
+     names=(cfg.data||[]).map(x=>byId[x.checklist_item_id]).filter(Boolean).map(x=>x.name);
+   }
+   // Bathrooms are mandatory on every service day.
+   const rb=await supabase.from('restaurant_bathrooms').select('name,toilet_count,urinal_count,sink_count').eq('restaurant_id',r.id).eq('active',true).order('name');
+   (rb.data||[]).forEach(b=>names.push(`Bathroom — ${b.name||'Bathroom'}`));
+   if(names.length){
+     await supabase.from('checklist_tasks').insert(names.map(name=>({assignment_id:assignment.id,task_name:name,completed:false})));
      const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
      tasks=tt.data||[];
    }
@@ -536,330 +551,83 @@ async function loadToday(){
  if(!isManagement()){
    const te=await supabase.from('time_entries').select('id,clock_in,clock_out').eq('assignment_id',assignment.id).eq('employee_id',session.user.id).order('clock_in',{ascending:false}).limit(1);
    timeEntry=te.data?.[0]||null;
-   const ph=await supabase.from('job_photos').select('id,photo_type,storage_path,created_at').eq('assignment_id',assignment.id).eq('employee_id',session.user.id).order('created_at',{ascending:false});
-   photos=ph.data||[];
- }
-}
-
-
-async function mainAnnouncements(){
- try{
-  const role=profile?.role||'employee';
-  const {data,error}=await supabase.from('announcements')
-   .select('id,title,body,audience,priority,created_at')
-   .eq('active',true)
-   .order('created_at',{ascending:false})
-   .limit(20);
-  if(error) return '';
-  const items=(data||[]).filter(a=>{
-   if(a.audience==='everyone')return true;
-   if(a.audience==='employees')return role==='employee';
-   if(a.audience==='managers')return role==='manager'||role==='owner';
-   return false;
-  }).slice(0,3);
-  const badge=items.length?`<span class="announcement-badge">${items.length}</span>`:'';
-  const rows=items.length?items.map(a=>`
-   <div class="main-announcement ${a.priority==='urgent'?'urgent':''}">
-    <div class="row">
-     <div class="announcement-title">${esc(a.title)}</div>
-     <span class="announcement-priority">${esc(String(a.priority||'normal').toUpperCase())}</span>
-    </div>
-    <div class="announcement-meta">${new Date(a.created_at).toLocaleDateString()}</div>
-    <div class="announcement-body">${esc(a.body)}</div>
-   </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
-  return `<div class="card announcement-card" style="margin-top:12px">
-   <div class="row">
-    <div><div class="tiny">UPDATES</div><h2 style="margin-top:3px">Announcements ${badge}</h2></div>
-    <button class="btn secondary" id="mainAnnouncementsBtn" type="button" style="min-height:42px">View all</button>
-   </div>
-   <div style="margin-top:8px">${rows}</div>
-  </div>`;
- }catch(e){return ''}
-}
-
-async function renderHome(){
- await loadToday();
- const r=todayRestaurant();
- const announcementsHtml=await mainAnnouncements();
- if(!r){
-  $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('today')}</div><h1>${T('noRestaurant')}</h1></div>
-  <div class="card"><p>There is no active restaurant scheduled for today.</p></div>
-  ${announcementsHtml}`;
-  setTimeout(()=>wireMainAnnouncements(),0);
-  return;
- }
- const done=tasks.filter(x=>x.completed).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
- const clocked=!!timeEntry&&!timeEntry.clock_out;
- $('content').innerHTML=`
- <div class="hero"><div class="eyebrow">${T('today')}</div><h1>${esc(r.name)}</h1><p>${dayNames[new Date().getDay()]} • ${fmtTime(r.start_time)}</p></div>
- ${announcementsHtml}
- <div class="grid3">
-  <div class="statcard"><div class="statlabel">${T('checklist')}</div><div class="statvalue">${done}/${total}</div></div>
-  <div class="statcard"><div class="statlabel">${T('assignment')}</div><div class="statvalue">${assignment?'1':'0'}</div></div>
-  <div class="statcard"><div class="statlabel">${isManagement()?T('employees'):T('hours')}</div><div class="statvalue">${isManagement()?employees.length:(clocked?'ON':'—')}</div></div>
- </div>
- <div class="card ${assignment?'gold':''}" style="margin-top:9px">
-   <div class="row"><div><div class="tiny">${T('assignment')}</div><div style="font-size:15px;font-weight:750;margin-top:4px">${assignment?esc(isManagement()?(employees.find(e=>e.id===assignment.employee_id)?.full_name||'Employee'):(r.name)):T('notAssigned')}</div></div>
-   ${assignment?`<span class="badge">${esc(assignment.status||'assigned')}</span>`:''}</div>
-   ${!isManagement()&&assignment?`<button class="btn ${clocked?'secondary':'gold'}" id="clockBtn" style="margin-top:11px">${clocked?T('clockOut'):T('clockIn')}</button>`:''}
-   ${isManagement()?`<button class="btn secondary" id="openTeam" style="margin-top:11px">${T('manage')}</button>`:''}
- </div>
- ${assignment?`<div class="card">
-  <div class="row"><h2>${T('checklist')}</h2><span class="badge">${pct}%</span></div>
-  <div class="progress"><div style="width:${pct}%"></div></div>
-  ${tasks.map(x=>`<label class="task ${x.completed?'done':''}"><input type="checkbox" data-task="${x.id}" ${x.completed?'checked':''} ${isManagement()?'disabled':''}><span>${esc(x.task_name)}</span></label>`).join('')}
-  ${!isManagement()?`<button class="btn ${pct===100?'gold':''}" id="completeBtn" style="margin-top:10px" ${pct<100?'disabled':''}>${T('complete')}</button>`:''}
- </div>`:`<div class="card"><div class="tiny">${T('assignment')}</div><h2>${T('notAssigned')}</h2><p>${isManagement()?'Assign an employee from Team.':'Your manager has not assigned you to today’s restaurant yet.'}</p></div>`}`;
- wireMainAnnouncements();
- if($('clockBtn'))$('clockBtn').onclick=clockToggle;
- if($('completeBtn'))$('completeBtn').onclick=completeJob;
- if($('openTeam'))$('openTeam').onclick=()=>showTab('team');
- document.querySelectorAll('[data-task]').forEach(c=>c.onchange=async e=>{
-   const {error}=await supabase.from('checklist_tasks').update({completed:e.target.checked,completed_at:e.target.checked?new Date().toISOString():null}).eq('id',e.target.dataset.task);
-   if(error)return toast(error.message);await renderHome();
- });
-}
-
-
-function wireMainAnnouncements(){
- const b=$('mainAnnouncementsBtn');
- if(!b)return;
- b.onclick=()=>{
-  const menu=$('menuBtn');
-  if(menu)menu.click();
-  setTimeout(()=>{$('announcementsBtn')?.click()},60);
- };
-}
-
-async function clockToggle(){
- if(!assignment)return;
- if(timeEntry&&!timeEntry.clock_out){
-   const {error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString()}).eq('id',timeEntry.id);
-   if(error)return toast(error.message);toast('Clocked out');
- }else{
-   const {error}=await supabase.from('time_entries').insert({assignment_id:assignment.id,employee_id:session.user.id,clock_in:new Date().toISOString()});
-   if(error)return toast(error.message);toast('Clocked in');
- }
- await renderHome();
-}
-async function completeJob(){
- if(tasks.some(x=>!x.completed))return toast('Finish every task first');
- const {error}=await supabase.from('employee_assignments').update({status:'completed'}).eq('id',assignment.id);
- if(error)return toast(error.message);
- await supabase.from('notifications').insert({type:'job_completed',title:'Job completed',body:`${profile.full_name||'Employee'} completed ${todayRestaurant()?.name||'the restaurant'}.`,related_id:assignment.id});
- toast('Job completed');await renderHome();
-}
-
-async function renderSchedule(){
- const rows=restaurants.map(r=>`<div class="listrow"><div class="avatar">${String(r.name||'R').slice(0,2).toUpperCase()}</div><div class="rowmain"><div class="rowtitle">${esc(r.name)}</div><div class="rowmeta">${dayNames[r.weekday]||''} • ${fmtTime(r.start_time)}</div></div>${isManagement()?`<button class="btn small" data-edit-r="${r.id}">${T('manage')}</button>`:''}</div>`).join('');
- $('content').innerHTML=`
- <div class="hero"><div class="eyebrow">${T('schedule')}</div><h1>${T('schedule')}</h1></div>
- <div class="card">${isManagement()?`<button class="btn gold" id="addRestaurant">${T('addRestaurant')}</button>`:''}
- <div class="list" style="margin-top:9px">${rows||`<div class="empty">No restaurants found.</div>`}</div></div>`;
- if($('addRestaurant'))$('addRestaurant').onclick=()=>restaurantModal();
- document.querySelectorAll('[data-edit-r]').forEach(b=>b.onclick=()=>restaurantModal(b.dataset.editR));
-}
-
-async function restaurantModal(id=null){
- const r=id?restaurants.find(x=>x.id===id):null;
- openModal(id?T('editRestaurant'):T('addRestaurant'),`
- <div class="field"><label>Name<input id="rName" value="${esc(r?.name||'')}"></label></div>
- <div class="grid2">
-  <div class="field"><label>Weekday<select id="rDay">${dayNames.map((d,i)=>`<option value="${i}" ${(r?.weekday??1)===i?'selected':''}>${d}</option>`).join('')}</select></label></div>
-  <div class="field"><label>Start Time<input id="rTime" type="time" value="${esc((r?.start_time||'').slice(0,5))}"></label></div>
- </div>
- <button class="btn gold" id="saveRestaurant">${T('save')}</button>
- ${r?`<button class="btn danger" id="toggleRestaurant" style="margin-top:7px">${r.active===false?T('activate'):T('deactivate')}</button>`:''}
- `);
- $('saveRestaurant').onclick=async()=>{
-  const name=$('rName').value.trim(),weekday=Number($('rDay').value),start_time=$('rTime').value;
-  if(!name||!start_time)return toast('Name and time are required');
-  const payload={name,weekday,start_time,active:true};
-  const q=id?supabase.from('restaurants').update(payload).eq('id',id):supabase.from('restaurants').insert(payload);
-  const {error}=await q;if(error)return toast(error.message);
-  closeModal();await loadBase();await renderSchedule();toast('Saved');
- };
- if($('toggleRestaurant'))$('toggleRestaurant').onclick=async()=>{
-  const {error}=await supabase.from('restaurants').update({active:r.active===false}).eq('id',id);
-  if(error)return toast(error.message);closeModal();await loadBase();await renderSchedule();
- };
-}
-
-async function renderTeam(){
- if(!isManagement()){return showTab('home')}
- await loadBase();
- const as=await supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false});
- const assignments=as.data||[];
- $('content').innerHTML=`
- <div class="hero"><div class="eyebrow">${isOwner()?T('ownerControl'):T('managerControl')}</div><h1>${T('team')}</h1></div>
- <div class="grid3">
-  <div class="statcard"><div class="statlabel">${T('employees')}</div><div class="statvalue">${employees.filter(e=>e.role==='employee').length}</div></div>
-  <div class="statcard"><div class="statlabel">${T('restaurants')}</div><div class="statvalue">${restaurants.length}</div></div>
-  <div class="statcard"><div class="statlabel">${T('assign')}</div><div class="statvalue">${assignments.length}</div></div>
- </div>
- <div class="card" style="margin-top:9px">
-  <div class="field"><label>${T('search')}<input id="teamSearch" placeholder="${T('search')}"></label></div>
-  <div class="list" id="teamList"></div>
- </div>
- <div class="sectionhead"><h2>${T('restaurants')}</h2><button class="link" id="teamRestaurants">Manage</button></div>
- <div class="card"><p>${T('connected')}</p><button class="btn secondary" id="checklistManage">${T('checkSetup')}</button></div>`;
- const renderList=()=>{
-  const q=($('teamSearch')?.value||'').toLowerCase();
-  const list=employees.filter(e=>(e.full_name||'').toLowerCase().includes(q));
-  $('teamList').innerHTML=list.length?list.map(e=>{
-   const ea=assignments.filter(a=>a.employee_id===e.id);
-   const role=e.role;
-   return `<div class="listrow">
-    <div class="avatar">${initials(e.full_name)}</div><div class="rowmain">
-     <div class="rowtitle">${esc(e.full_name||'Employee')}</div>
-     <div class="rowmeta">${role==='manager'?T('manager'):T('employee')} • ${ea.length} assignment${ea.length===1?'':'s'}</div>
-    </div>
-    <span class="badge ${e.active===false?'off':'ok'}">${e.active===false?T('inactive'):T('active')}</span>
-    <button class="btn small" data-manage-e="${e.id}">${T('manage')}</button>
-   </div>`;
-  }).join(''):`<div class="empty">${T('noEmployees')}</div>`;
-  document.querySelectorAll('[data-manage-e]').forEach(b=>b.onclick=()=>employeeModal(b.dataset.manageE,assignments));
- };
- $('teamSearch').oninput=renderList;renderList();
- $('teamRestaurants').onclick=()=>showTab('schedule');
- $('checklistManage').onclick=()=>checklistManager();
-}
-
-async function employeeModal(id,allAssignments){
- const e=employees.find(x=>x.id===id);if(!e)return;
- const ea=allAssignments.filter(a=>a.employee_id===id);
- openModal(T('manage'),`
-  <div class="row"><div><div style="font-size:15px;font-weight:750">${esc(e.full_name||'Employee')}</div><div class="rowmeta">${esc(e.role)}</div></div><span class="badge ${e.active===false?'off':'ok'}">${e.active===false?T('inactive'):T('active')}</span></div>
-  <div class="sectionhead"><h2>${T('assignment')}</h2></div>
-  <div class="list" id="empAssignments">${ea.length?ea.map(a=>`<div class="listrow"><div class="rowmain"><div class="rowtitle">${esc(restaurants.find(r=>r.id===a.restaurant_id)?.name||'Restaurant')}</div><div class="rowmeta">${esc(a.work_date||'')}</div></div><button class="btn small danger" data-remove-a="${a.id}">${T('remove')}</button></div>`).join(''):`<div class="empty">${T('noAssignments')}</div>`}</div>
-  <div class="grid2" style="margin-top:8px">
-   <button class="btn gold" id="assignEmployee">${T('assign')}</button>
-   <button class="btn secondary" id="historyEmployee">${T('history')}</button>
-  </div>
-  <button class="btn secondary" id="toggleEmployee" style="margin-top:7px">${e.active===false?T('activate'):T('deactivate')}</button>
-  ${isOwner()&&e.role==='employee'?`<button class="btn secondary" id="promoteEmployee" style="margin-top:7px">${T('promote')}</button>`:''}
-  ${isOwner()&&e.role==='manager'?`<button class="btn danger" id="demoteEmployee" style="margin-top:7px">${T('demote')}</button>`:''}
- `);
- document.querySelectorAll('[data-remove-a]').forEach(b=>b.onclick=async()=>{
-  const {error}=await supabase.from('employee_assignments').delete().eq('id',b.dataset.removeA);
-  if(error)return toast(error.message);closeModal();await renderTeam();
- });
- $('assignEmployee').onclick=()=>assignmentModal(e.id);
- $('historyEmployee').onclick=()=>employeeHistory(e.id);
- $('toggleEmployee').onclick=async()=>{
-  const {error}=await supabase.from('profiles').update({active:e.active===false}).eq('id',e.id);
-  if(error)return toast(error.message);closeModal();await loadBase();await renderTeam();
- };
- if($('promoteEmployee'))$('promoteEmployee').onclick=async()=>{
-  const {error}=await supabase.from('profiles').update({role:'manager'}).eq('id',e.id);
-  if(error)return toast(error.message);toast('Employee promoted to Manager');closeModal();await loadBase();await renderTeam();
- };
- if($('demoteEmployee'))$('demoteEmployee').onclick=async()=>{
-  const {error}=await supabase.from('profiles').update({role:'employee'}).eq('id',e.id);
-  if(error)return toast(error.message);toast('Manager changed to Employee');closeModal();await loadBase();await renderTeam();
- };
-}
-
-async function assignmentModal(empId){
- const firstActive=restaurants.find(r=>r.active!==false);
- openModal(T('assign'),`
-  <div class="notice" style="margin-bottom:10px">
-    Assigning a restaurant creates a recurring service schedule for the next 52 service weeks.
-  </div>
-  <div class="field"><label>${T('restaurants')}<select id="aRestaurant">${restaurants.filter(r=>r.active!==false).map(r=>`<option value="${r.id}">${esc(r.name)} • ${dayNames[r.weekday]} • ${fmtTime(r.start_time)}</option>`).join('')}</select></label></div>
-  <div class="field"><label>Start date<input id="aDate" type="date" value="${localDate()}"></label></div>
-  <div class="workflow-note" style="margin-top:8px">
-    The app will automatically create each upcoming service date for the selected restaurant. The employee will only see the restaurant when its scheduled weekday arrives.
-  </div>
-  <button class="btn gold" id="saveAssignment">${T('assign')}</button>`);
- $('saveAssignment').onclick=async()=>{
-  const restaurant_id=$('aRestaurant').value,start=$('aDate').value;
-  if(!restaurant_id||!start)return toast('Restaurant and start date are required');
-
-  const restaurant=restaurants.find(r=>r.id===restaurant_id);
-  if(!restaurant)return toast('Restaurant not found');
-
-  const targetDay=Number(restaurant.weekday);
-  const startDate=new Date(start+'T12:00:00');
-  if(Number.isNaN(startDate.getTime()))return toast('Invalid start date');
-
-  // Find the first occurrence on/after the chosen start date that matches
-  // the restaurant's configured weekday, then create 52 weekly service rows.
-  const first=new Date(startDate);
-  const delta=(targetDay-first.getDay()+7)%7;
-  first.setDate(first.getDate()+delta);
-
-  const dates=[];
-  for(let i=0;i<52;i++){
-    const d=new Date(first);
-    d.setDate(first.getDate()+i*7);
-    dates.push(d.toISOString().slice(0,10));
-  }
-
-  const existing=await supabase.from('employee_assignments')
-    .select('work_date')
-    .eq('employee_id',empId)
-    .eq('restaurant_id',restaurant_id)
-    .in('work_date',dates);
-
-  if(existing.error)return toast(existing.error.message);
-  const have=new Set((existing.data||[]).map(x=>x.work_date));
-  const rows=dates.filter(d=>!have.has(d)).map(work_date=>({
-    employee_id:empId,
-    restaurant_id,
-    work_date,
-    status:'assigned'
-  }));
-
-  if(rows.length){
-    const {error}=await supabase.from('employee_assignments').insert(rows);
-    if(error)return toast(error.message);
-  }
-
-  toast(`Recurring assignment saved • ${dates.length} service weeks`);
-  closeModal();
-  await renderTeam();
- };
-}
-
-async function employeeHistory(id){
- const [t,p,s]=await Promise.all([
-  supabase.from('time_entries').select('*').eq('employee_id',id).order('clock_in',{ascending:false}).limit(30),
-  supabase.from('job_photos').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30),
-  supabase.from('completion_signatures').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30)
- ]);
- openModal(T('history'),`
- <div class="grid3">
-  <div class="statcard"><div class="statlabel">${T('hours')}</div><div class="statvalue">${(t.data||[]).length}</div></div>
-  <div class="statcard"><div class="statlabel">${T('jobPhotos')}</div><div class="statvalue">${(p.data||[]).length}</div></div>
-  <div class="statcard"><div class="statlabel">${T('signatures')}</div><div class="statvalue">${(s.data||[]).length}</div></div>
- </div>
- <div class="sectionhead"><h2>${T('hours')}</h2></div>
- <div class="list">${(t.data||[]).slice(0,12).map(x=>`<div class="listrow"><div class="rowmain"><div class="rowtitle">${new Date(x.clock_in).toLocaleDateString()}</div><div class="rowmeta">${new Date(x.clock_in).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})} → ${x.clock_out?new Date(x.clock_out).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Open'}</div></div></div>`).join('')||`<div class="empty">No time entries.</div>`}</div>
- `);
-}
-
-async function renderWork(){
- if(!isManagement()){
-  await loadToday();
-  $('content').innerHTML=`
-   <div class="hero"><div class="eyebrow">${T('work')}</div><h1>${T('photos')}</h1></div>
-   <div class="card"><p>${assignment?'Upload the required before and after photos for today’s assignment.':'No job is assigned to you today.'}</p>
-   ${assignment?`<div class="photoGrid">
-    <div><div class="tiny">${T('before')}</div><input id="beforeFile" type="file" accept="image/*" capture="environment" style="margin-top:7px;width:100%"></div>
-    <div><div class="tiny">${T('after')}</div><input id="afterFile" type="file" accept="image/*" capture="environment" style="margin-top:7px;width:100%"></div>
-   </div><button class="btn gold" id="uploadBtn" style="margin-top:10px">${T('upload')}</button>`:''}</div>`;
-  if($('uploadBtn'))$('uploadBtn').onclick=uploadPhotos;
-  return;
- }
- const ph=await supabase.from('job_photos').select('id,employee_id,assignment_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(40);
+   const ph=await supabase.from('job_photos').select('id,employee_id,assignment_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(200);
  const list=ph.data||[];
- const cards=await Promise.all(list.map(async p=>{
-  const emp=employees.find(e=>e.id===p.employee_id)?.full_name||'Employee';
-  const signed=await supabase.storage.from('job-photos').createSignedUrl(p.storage_path,3600);
-  return `<div class="listrow"><div class="rowmain"><div class="rowtitle">${esc(emp)} • ${esc(p.photo_type)}</div><div class="rowmeta">${new Date(p.created_at).toLocaleString()}</div>${signed.data?.signedUrl?`<img class="photo" style="margin-top:7px" src="${esc(signed.data.signedUrl)}" alt="">`:''}</div></div>`;
+ const assignmentIds=[...new Set(list.map(p=>p.assignment_id).filter(Boolean))];
+ let assignmentMap={};
+ if(assignmentIds.length){
+  const ar=await supabase.from('employee_assignments').select('id,restaurant_id,work_date').in('id',assignmentIds);
+  (ar.data||[]).forEach(a=>assignmentMap[a.id]=a);
+ }
+ const restaurantMap={};
+ restaurants.forEach(r=>restaurantMap[r.id]=r);
+ const groups={};
+ list.forEach(p=>{
+  const a=assignmentMap[p.assignment_id];
+  const r=a?restaurantMap[a.restaurant_id]:null;
+  const date=a?.work_date || p.created_at?.slice(0,10) || 'Unknown date';
+  const key=`${date}__${a?.restaurant_id||'unknown'}`;
+  if(!groups[key]) groups[key]={date,restaurant:r?.name||'Unknown restaurant',photos:[]};
+  groups[key].photos.push(p);
+ });
+ const groupKeys=Object.keys(groups).sort((a,b)=>groups[b].date.localeCompare(groups[a].date)||groups[a].restaurant.localeCompare(groups[b].restaurant));
+ const cards=await Promise.all(groupKeys.map(async key=>{
+  const g=groups[key];
+  const byEmployee={};
+  g.photos.forEach(p=>{const emp=employees.find(e=>e.id===p.employee_id)?.full_name||'Employee';if(!byEmployee[emp])byEmployee[emp]=[];byEmployee[emp].push(p)});
+  const employeeBlocks=await Promise.all(Object.entries(byEmployee).sort((a,b)=>a[0].localeCompare(b[0])).map(async([emp,items])=>{
+   const imgs=await Promise.all(items.map(async p=>{
+    const signed=await supabase.storage.from('job-photos').createSignedUrl(p.storage_path,3600);
+    return `<div><div class="tiny">${esc(p.photo_type==='before'?T('before'):T('after'))}</div>${signed.data?.signedUrl?`<img class="photo" style="margin-top:5px" src="${esc(signed.data.signedUrl)}" alt="${esc(p.photo_type)}">`:`<div class="empty" style="padding:10px">Photo unavailable</div>`}<div class="rowmeta" style="margin-top:4px">${new Date(p.created_at).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</div></div>`;
+   }));
+   return `<div class="card" style="margin-top:9px"><div class="rowtitle">${esc(emp)}</div><div class="photoGrid" style="margin-top:8px">${imgs.join('')}</div></div>`;
+  }));
+  return `<div class="card" style="margin-top:12px"><div class="sectionhead"><div><div class="eyebrow">${esc(g.restaurant)}</div><h2 style="margin:3px 0 0">${new Date(g.date+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'})}</h2></div><div class="tiny">${g.photos.length} ${g.photos.length===1?'photo':'photos'}</div></div>${employeeBlocks.join('')}</div>`;
  }));
- $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('work')}</div><h1>${T('jobPhotos')}</h1></div><div class="card"><div class="list">${cards.join('')||`<div class="empty">No job photos yet.</div>`}</div></div>`;
+ $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('work')}</div><h1>${T('jobPhotos')}</h1><p>Organized by restaurant and service date.</p></div>${cards.join('')||`<div class="card"><div class="empty">No job photos yet.</div></div>`}`;
+
+}
+
+function formatDateLocal(v){
+ if(!v)return '—';
+ return new Date(v+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'});
+}
+function formatTimeLocal(v){
+ if(!v)return '—';
+ return new Date(v).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'});
+}
+function minutesBetween(a,b){return a&&b?Math.max(0,Math.round((new Date(b)-new Date(a))/60000)):0;}
+function formatDuration(m){if(!m)return '0m';const h=Math.floor(m/60),mm=m%60;return h?`${h}h ${mm}m`:`${mm}m`;}
+
+async function renderTimeTracking(){
+ if(!isManagement())return;
+ await loadBase();
+ const [te,aa]=await Promise.all([
+  supabase.from('time_entries').select('id,assignment_id,employee_id,clock_in,clock_out').order('clock_in',{ascending:false}).limit(1000),
+  supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false}).limit(1000)
+ ]);
+ if(te.error||aa.error){$('content').innerHTML=`<div class="card"><div class="empty">${esc((te.error||aa.error).message)}</div></div>`;return;}
+ const am={},rm={},em={};(aa.data||[]).forEach(a=>am[a.id]=a);(restaurants||[]).forEach(r=>rm[r.id]=r);(employees||[]).forEach(e=>em[e.id]=e);
+ const records=(te.data||[]).map(x=>{const a=am[x.assignment_id];return {x,employee:em[x.employee_id]?.full_name||'Employee',restaurant:rm[a?.restaurant_id]?.name||'Unknown restaurant',date:a?.work_date||x.clock_in?.slice(0,10)||'',minutes:minutesBetween(x.clock_in,x.clock_out)};});
+ const employeeNames=[...new Set(records.map(x=>x.employee))].sort(),restaurantNames=[...new Set(records.map(x=>x.restaurant))].sort();
+ $('content').innerHTML=`<div class="hero"><div class="eyebrow">MANAGEMENT</div><h1>Time Tracking</h1><p>Employee clock-in and clock-out records.</p></div><div class="card"><div class="field"><label>Restaurant<select id="timeRestaurant"><option value="">All restaurants</option>${restaurantNames.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></label></div><div class="field"><label>Employee<select id="timeEmployee"><option value="">All employees</option>${employeeNames.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></label></div><div class="field"><label>Date<input id="timeDate" type="date"></label></div></div><div id="timeResults"></div>`;
+ const draw=()=>{const rf=$('timeRestaurant').value,ef=$('timeEmployee').value,df=$('timeDate').value;const rows=records.filter(x=>(!rf||x.restaurant===rf)&&(!ef||x.employee===ef)&&(!df||x.date===df));const total=rows.reduce((n,x)=>n+x.minutes,0);$('timeResults').innerHTML=`<div class="card" style="margin-top:10px"><div class="sectionhead"><div><div class="eyebrow">CLOCK RECORDS</div><h3>${rows.length} record${rows.length===1?'':'s'}</h3></div><div class="tiny">${formatDuration(total)} completed</div></div></div>${rows.map(x=>{const open=!x.x.clock_out;return `<div class="card" style="margin-top:10px"><div class="sectionhead"><div><div class="eyebrow">${esc(x.restaurant)}</div><h3 style="margin:3px 0">${esc(x.employee)}</h3><div class="rowmeta">${esc(formatDateLocal(x.date))}</div></div><span class="badge ${open?'':'off'}">${open?'WORKING':'CLOCKED OUT'}</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="stat"><div class="statlabel">CLOCK IN</div><div class="statvalue" style="font-size:18px">${esc(formatTimeLocal(x.x.clock_in))}</div></div><div class="stat"><div class="statlabel">CLOCK OUT</div><div class="statvalue" style="font-size:18px">${esc(formatTimeLocal(x.x.clock_out))}</div></div></div><div class="rowmeta" style="margin-top:9px">Completed time: <b>${esc(formatDuration(x.minutes))}</b>${open?' • Currently working':''}</div></div>`}).join('')||'<div class="card"><div class="empty">No clock records match these filters.</div></div>'}`;};
+ ['timeRestaurant','timeEmployee','timeDate'].forEach(id=>$(id).addEventListener('change',draw));draw();
+}
+
+async function renderManagementPhotos(){
+ if(!isManagement())return;
+ await loadBase();
+ const [pp,aa]=await Promise.all([
+  supabase.from('job_photos').select('id,assignment_id,employee_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(500),
+  supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false}).limit(1000)
+ ]);
+ if(pp.error||aa.error){$('content').innerHTML=`<div class="card"><div class="empty">${esc((pp.error||aa.error).message)}</div></div>`;return;}
+ const am={},rm={},em={};(aa.data||[]).forEach(a=>am[a.id]=a);(restaurants||[]).forEach(r=>rm[r.id]=r);(employees||[]).forEach(e=>em[e.id]=e);
+ const groups={};(pp.data||[]).forEach(p=>{const a=am[p.assignment_id],date=a?.work_date||p.created_at?.slice(0,10)||'Unknown date',rid=a?.restaurant_id||'unknown',key=`${date}__${rid}`;(groups[key]??={date,restaurant:rm[rid]?.name||'Unknown restaurant',photos:[]}).photos.push(p);});
+ const keys=Object.keys(groups).sort((a,b)=>groups[b].date.localeCompare(groups[a].date)||groups[a].restaurant.localeCompare(groups[b].restaurant));
+ const cards=await Promise.all(keys.map(async key=>{const g=groups[key],byEmp={};g.photos.forEach(p=>{const n=em[p.employee_id]?.full_name||'Employee';(byEmp[n]??=[]).push(p);});const blocks=await Promise.all(Object.entries(byEmp).sort((a,b)=>a[0].localeCompare(b[0])).map(async([name,items])=>{items.sort((a,b)=>a.photo_type.localeCompare(b.photo_type));const imgs=await Promise.all(items.map(async p=>{const su=await supabase.storage.from('job-photos').createSignedUrl(p.storage_path,3600);return `<div><div class="tiny">${esc(p.photo_type==='before'?'BEFORE':'AFTER')}</div>${su.data?.signedUrl?`<img class="photo" src="${esc(su.data.signedUrl)}" alt="${esc(p.photo_type)} photo" style="margin-top:5px">`:'<div class="empty" style="padding:12px">Photo unavailable</div>'}<div class="rowmeta" style="margin-top:4px">${esc(formatTimeLocal(p.created_at))}</div></div>`;}));return `<div class="card" style="margin-top:9px"><div class="rowtitle">${esc(name)}</div><div class="photoGrid" style="margin-top:8px">${imgs.join('')}</div></div>`;}));return `<div class="card" style="margin-top:12px"><div class="sectionhead"><div><div class="eyebrow">${esc(g.restaurant)}</div><h2 style="margin:3px 0 0">${esc(formatDateLocal(g.date))}</h2></div><div class="tiny">${g.photos.length} photo${g.photos.length===1?'':'s'}</div></div>${blocks.join('')}</div>`;}));
+ $('content').innerHTML=`<div class="hero"><div class="eyebrow">MANAGEMENT</div><h1>Job Photos</h1><p>Organized by restaurant, service date, and employee.</p></div>${cards.join('')||'<div class="card"><div class="empty">No job photos yet.</div></div>'}`;
 }
 
 async function uploadPhotos(){
@@ -911,9 +679,39 @@ $('drawer').addEventListener('click',e=>{if(e.target===$('drawer'))$('drawer').c
 $('langEn').onclick=()=>{lang='en';localStorage.setItem('cleaning_ops_lang',lang);$('drawer').classList.remove('open');if(session)renderShell();else loginScreen()};
 $('langEs').onclick=()=>{lang='es';localStorage.setItem('cleaning_ops_lang',lang);$('drawer').classList.remove('open');if(session)renderShell();else loginScreen()};
 $('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()};
+$('timeTrackingBtn').onclick=async()=>{if(!isManagement())return; $('drawer').classList.remove('open'); await renderTimeTracking();};
+$('jobPhotosBtn').onclick=async()=>{if(!isManagement())return; $('drawer').classList.remove('open'); await renderManagementPhotos();};
 
 supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
 boot();
+</script>
+
+<script id="v911-work-history-js">
+(function(){
+ const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+ const date=s=>s?new Date(s+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'}):'—';
+ const time=s=>s?new Date(s).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—';
+ const mins=n=>n?`${Math.floor(n/60)}h ${n%60}m`:'—';
+ const dur=(a,b)=>a&&b?Math.max(0,Math.round((new Date(b)-new Date(a))/60000)):0;
+ window.renderHistory=async function(){
+  if(!isManagement())return;
+  const [aa,tt,pp,ss]=await Promise.all([
+   supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false}).limit(500),
+   supabase.from('time_entries').select('id,assignment_id,employee_id,clock_in,clock_out').order('clock_in',{ascending:false}).limit(1000),
+   supabase.from('job_photos').select('id,assignment_id,employee_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(1000),
+   supabase.from('completion_signatures').select('*').order('created_at',{ascending:false}).limit(1000)
+  ]);
+  if(aa.error){$('content').innerHTML=`<div class="card"><div class="empty">${e(aa.error.message)}</div></div>`;return;}
+  const tm={},pm={},sm={};(tt.data||[]).forEach(x=>(tm[x.assignment_id]??=[]).push(x));(pp.data||[]).forEach(x=>(pm[x.assignment_id]??=[]).push(x));(ss.data||[]).forEach(x=>sm[x.assignment_id]=x);
+  const rm={},em={};(restaurants||[]).forEach(x=>rm[x.id]=x);(employees||[]).forEach(x=>em[x.id]=x);
+  const rows=(aa.data||[]).map(a=>{const ts=tm[a.id]||[],ps=pm[a.id]||[],last=ts[0];return {a,r:rm[a.restaurant_id]?.name||'Unknown restaurant',u:em[a.employee_id]?.full_name||'Employee',d:a.work_date||'',m:mins(ts.reduce((n,x)=>n+dur(x.clock_in,x.clock_out),0)),ci:last?.clock_in,co:last?.clock_out,p:ps.length,b:ps.some(x=>x.photo_type==='before'),af:ps.some(x=>x.photo_type==='after'),sig:!!sm[a.id],done:a.status==='completed'};});
+  const opts=(xs,p)=>`<option value="">${p}</option>`+xs.map(x=>`<option value="${e(x)}">${e(x)}</option>`).join('');
+  const rid='histRestaurant',uid='histEmployee',did='histDate',sid='histStatus';
+  $('content').innerHTML=`<div class="hero"><div class="eyebrow">MANAGEMENT</div><h1>Work History</h1><p>Review service records by restaurant, employee, and date.</p></div><div class="card"><div class="sectionhead"><div><div class="eyebrow">REPORTS</div><h3>Job Records</h3></div><div class="tiny" id="historyCount"></div></div><div class="field"><label>Restaurant<select id="${rid}">${opts([...new Set(rows.map(x=>x.r))].sort(),'All restaurants')}</select></label></div><div class="field"><label>Employee<select id="${uid}">${opts([...new Set(rows.map(x=>x.u))].sort(),'All employees')}</select></label></div><div class="field"><label>Service date<input id="${did}" type="date"></label></div><div class="field"><label>Status<select id="${sid}"><option value="">All statuses</option><option value="completed">Completed</option><option value="progress">In progress</option></select></label></div></div><div id="historyResults"></div>`;
+  const draw=()=>{const rf=$(rid).value,uf=$(uid).value,df=$(did).value,sf=$(sid).value;const f=rows.filter(x=>(!rf||x.r===rf)&&(!uf||x.u===uf)&&(!df||x.d===df)&&(!sf||(sf==='completed'?x.done:!x.done)));$('historyCount').textContent=`${f.length} job${f.length===1?'':'s'} • ${f.reduce((n,x)=>n+x.p,0)} photo${f.reduce((n,x)=>n+x.p,0)===1?'':'s'}`;$('historyResults').innerHTML=f.map(x=>`<div class="card" style="margin-top:10px"><div class="sectionhead"><div><div class="eyebrow">${e(x.r)}</div><h3 style="margin:3px 0">${e(x.u)}</h3><div class="rowmeta">${e(date(x.d))}</div></div><span class="badge ${x.done?'':'off'}">${x.done?'COMPLETED':'IN PROGRESS'}</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="stat"><div class="statlabel">TIME</div><div class="statvalue">${e(x.m)}</div></div><div class="stat"><div class="statlabel">PHOTOS</div><div class="statvalue">${x.p}</div></div></div><div class="rowmeta" style="margin-top:10px">Clock in ${e(time(x.ci))} • Clock out ${e(time(x.co))}</div><div class="rowmeta" style="margin-top:5px">Before ${x.b?'✓':'—'} • After ${x.af?'✓':'—'} • Signature ${x.sig?'✓':'—'}</div></div>`).join('')||'<div class="card"><div class="empty">No work records match these filters.</div></div>';};
+  [rid,uid,did,sid].forEach(id=>$(id).addEventListener('change',draw));draw();
+ };
+})();
 </script>
 
 <script id="v95-announcements-js">
@@ -964,7 +762,6 @@ boot();
         <div class="announcement-title">${esc(a.title||'Announcement')}</div>
         <div class="announcement-meta">${String(a.priority||'normal').toUpperCase()} • ${a.audience||'everyone'} • ${new Date(a.created_at).toLocaleDateString()}</div>
         <div class="announcement-body">${esc(a.body||'')}</div>
-        <button class="btn danger small" type="button" data-delete-announcement="${a.id}" style="margin-top:8px;width:auto">Delete</button>
       </div>`).join('');
 
     openModal('Announcements',`
@@ -984,16 +781,6 @@ boot();
         <button class="btn gold" id="publishAnnouncement">Publish Announcement</button>
       </div>
       <div style="margin-top:18px">${rows||'<div class="muted">No announcements yet.</div>'}</div>`);
-
-    document.querySelectorAll('[data-delete-announcement]').forEach(btn=>btn.onclick=async()=>{
-      if(!confirm('Delete this announcement?')) return;
-      btn.disabled=true;
-      const {error}=await supabase.from('announcements').delete().eq('id',btn.dataset.deleteAnnouncement);
-      if(error){btn.disabled=false;return toast(error.message)}
-      toast('Announcement deleted');
-      closeModal();
-      if(typeof render==='function') await render();
-    });
 
     $('publishAnnouncement').onclick=async()=>{
       const title=$('annTitle').value.trim(),body=$('annBody').value.trim();
@@ -1060,6 +847,7 @@ async function showAnnouncements(){
       <div class="announcement-title">${annEsc(a.title)}</div>
       <div class="announcement-meta">${String(a.priority||'normal').toUpperCase()} • ${new Date(a.created_at).toLocaleDateString()}</div>
       <div class="announcement-body">${annEsc(a.body)}</div>
+      ${profile.role==='owner'?`<div style="margin-top:10px"><button class="btn secondary ann-delete" data-id="${a.id}" type="button" style="min-height:40px">Delete</button></div>`:''}
     </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
 
   let ownerForm='';
@@ -1090,6 +878,21 @@ async function showAnnouncements(){
     body.innerHTML=ownerForm+`<div class="announcement-list" style="margin-top:14px">${rows}</div>`;
     modal.classList.add('open');
   }
+
+  document.querySelectorAll('.ann-delete').forEach(btn=>{
+    btn.onclick=async()=>{
+      const id=btn.dataset.id;
+      if(!id || profile.role!=='owner') return;
+      if(!confirm('Delete this announcement? This cannot be undone.')) return;
+      btn.disabled=true;
+      const {error}=await annSupabase.from('announcements').delete().eq('id',id);
+      if(error){btn.disabled=false; alert(error.message); return;}
+      if(typeof window.toast==='function') window.toast('Announcement deleted');
+      await showAnnouncements();
+      await updateAnnouncementBadge();
+      if(typeof window.renderHome==='function') await window.renderHome();
+    };
+  });
 
   const publish=document.getElementById('publishAnnouncement96');
   if(publish){
@@ -1292,6 +1095,52 @@ if(document.readyState==='loading'){
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install98);
   else install98();
 })();
+</script>
+
+
+
+<style id="v912-checklist">
+.check-setup-grid{display:grid;gap:10px}.check-restaurant{border:1px solid rgba(255,255,255,.08);border-radius:14px;overflow:hidden;background:rgba(255,255,255,.025)}
+.check-restaurant-head{padding:13px;display:flex;justify-content:space-between;align-items:center}.check-restaurant-body{padding:0 13px 13px;display:grid;gap:8px}
+.check-choice{display:flex;align-items:flex-start;gap:9px;padding:9px;border:1px solid rgba(255,255,255,.07);border-radius:10px}.check-choice input{margin-top:3px;accent-color:var(--gold)}
+.check-choice small{display:block;opacity:.62;margin-top:2px}.check-savebar{position:sticky;bottom:0;padding-top:10px;background:linear-gradient(transparent,var(--bg) 35%)}
+</style>
+<script type="module" id="v912-checklist-module">
+import { createClient as createChecklistClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+const cs=createChecklistClient('https://uwfoqbyejrfrgiwftvli.supabase.co','sb_publishable_fKXaIcoTfnQ8joXp3VM_YA_1u82btt1');
+const ce=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+async function cp(){const {data:{user}}=await cs.auth.getUser();if(!user)return null;const {data}=await cs.from('profiles').select('id,role,active').eq('id',user.id).maybeSingle();return data||null}
+async function openChecklistSetup(){
+ const p=await cp();if(!p||!['owner','manager'].includes(p.role))return;
+ const [r,c,i,b]=await Promise.all([
+  cs.from('restaurants').select('id,name,weekday,start_time,active').eq('active',true).order('weekday'),
+  cs.from('checklist_categories').select('id,name,sort_order').eq('active',true).order('sort_order'),
+  cs.from('checklist_items').select('id,category_id,name,description,sort_order').eq('active',true).order('sort_order'),
+  cs.from('restaurant_bathrooms').select('restaurant_id,name,toilet_count,urinal_count,sink_count').eq('active',true).order('name')
+ ]);
+ if(r.error||c.error||i.error||b.error)return alert((r.error||c.error||i.error||b.error).message);
+ const restaurants=r.data||[], cats=c.data||[], items=i.data||[], baths=b.data||[];
+ const configs=await Promise.all(restaurants.map(async x=>{const q=await cs.from('restaurant_checklist_config').select('checklist_item_id,sort_order').eq('restaurant_id',x.id).eq('active',true).order('sort_order');return [x.id,q.data||[]]}));
+ const map=Object.fromEntries(configs);
+ const body=`<p class="muted">Choose exactly which cleaning tasks apply to each restaurant. Bathrooms are always mandatory.</p><div class="check-setup-grid">${restaurants.map(rest=>{
+  const chosen=new Set((map[rest.id]||[]).map(x=>x.checklist_item_id));
+  const rb=baths.filter(x=>x.restaurant_id===rest.id);
+  return `<div class="check-restaurant"><div class="check-restaurant-head"><div><b>${ce(rest.name)}</b><div class="muted">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][rest.weekday]||''} • ${ce(rest.start_time||'')}</div></div><span class="badge">${chosen.size} tasks</span></div><div class="check-restaurant-body">${cats.map(cat=>{const its=items.filter(x=>x.category_id===cat.id);if(!its.length)return '';return `<div class="tiny" style="margin-top:3px">${ce(cat.name)}</div>${its.map(it=>`<label class="check-choice"><input type="checkbox" class="rc-item" data-rid="${rest.id}" data-iid="${it.id}" ${chosen.has(it.id)?'checked':''}><span><b>${ce(it.name)}</b>${it.description?`<small>${ce(it.description)}</small>`:''}</span></label>`).join('')}`}).join('')}<div class="check-choice"><span>🚻</span><span><b>Bathrooms — Mandatory</b><small>${rb.length?rb.map(x=>ce(x.name||'Bathroom')).join(' • '):'No bathroom configured yet'}</small></span></div></div></div>`;
+ }).join('')}</div><div class="check-savebar"><button class="btn gold" id="saveChecklistConfig">Save Restaurant Checklists</button></div>`;
+ const modal=document.getElementById('modal'),title=document.getElementById('modalTitle'),mb=document.getElementById('modalBody');title.textContent='CHECKLIST SETUP';mb.innerHTML=body;modal.classList.add('open');
+ document.getElementById('saveChecklistConfig').onclick=async()=>{
+  const btn=document.getElementById('saveChecklistConfig');btn.disabled=true;
+  for(const rest of restaurants){
+   const checked=[...document.querySelectorAll(`.rc-item[data-rid="${rest.id}"]:checked`)].map((x,n)=>({restaurant_id:rest.id,checklist_item_id:x.dataset.iid,active:true,sort_order:n}));
+   const del=await cs.from('restaurant_checklist_config').delete().eq('restaurant_id',rest.id);if(del.error){btn.disabled=false;return alert(del.error.message)}
+   if(checked.length){const ins=await cs.from('restaurant_checklist_config').insert(checked);if(ins.error){btn.disabled=false;return alert(ins.error.message)}}
+  }
+  btn.disabled=false;modal.classList.remove('open');alert('Restaurant checklists saved.');
+ };
+}
+window.openChecklistSetup=openChecklistSetup;
+function addButton(){const drawer=document.getElementById('drawer');if(!drawer||document.getElementById('checklistSetupBtn'))return;const cards=drawer.querySelectorAll('.card');const c=cards[2];if(!c)return;const b=document.createElement('button');b.id='checklistSetupBtn';b.className='btn secondary';b.type='button';b.textContent='Checklist Setup';b.style.marginTop='8px';b.onclick=()=>{drawer.classList.remove('open');openChecklistSetup()};c.appendChild(b)}
+addButton();setTimeout(addButton,500);setInterval(addButton,1500);
 </script>
 
 </body>
