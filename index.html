@@ -744,95 +744,24 @@ $('langEn').onclick=()=>{lang='en';localStorage.setItem('cleaning_ops_lang',lang
 $('langEs').onclick=()=>{lang='es';localStorage.setItem('cleaning_ops_lang',lang);$('drawer').classList.remove('open');if(session)renderShell();else loginScreen()};
 $('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()};
 
+async function loadAnnouncements(){
+ const {data,error}=await supabase.from('announcements').select('id,title,body,audience,priority,active,created_at,created_by').eq('active',true).order('created_at',{ascending:false});
+ if(error){console.error('Announcements:',error);return []} return data||[];
+}
+function visibleAnnouncement(a){if(a.audience==='everyone')return true;if(a.audience==='managers')return profile?.role==='manager'||profile?.role==='owner';if(a.audience==='employees')return profile?.role==='employee';return true}
+async function showAnnouncements(){
+ const items=(await loadAnnouncements()).filter(visibleAnnouncement);
+ const rows=items.length?items.map(a=>`<div class="announcement-item"><div class="announcement-title">${esc(a.title||'Announcement')}</div><div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div><div class="announcement-body">${esc(a.body||'')}</div></div>`).join(''):`<div class="muted">No announcements yet.</div>`;
+ const ownerForm=profile?.role==='owner'?`<div class="announcement-compose"><input id="annTitleOnly" placeholder="Title"><textarea id="annBodyOnly" placeholder="Write your announcement..."></textarea><select id="annAudienceOnly"><option value="everyone">Everyone</option><option value="employees">Employees</option><option value="managers">Managers</option></select><select id="annPriorityOnly"><option value="normal">Normal</option><option value="important">Important</option><option value="urgent">Urgent</option></select><button class="btn gold" id="publishAnnouncementOnly" type="button">Publish Announcement</button></div>`:'';
+ openModal('ANNOUNCEMENTS',`<section class="card announcement-card">${ownerForm}<div class="announcement-list" style="margin-top:14px">${rows}</div></section>`);
+ const publish=$('publishAnnouncementOnly'); if(publish)publish.onclick=async()=>{const title=$('annTitleOnly').value.trim(),body=$('annBodyOnly').value.trim();if(!title||!body)return toast('Title and message are required');const {error}=await supabase.from('announcements').insert({title,body,audience:$('annAudienceOnly').value,priority:$('annPriorityOnly').value,active:true,created_by:profile.id});if(error)return toast(error.message);toast('Announcement published');await showAnnouncements()};
+}
+$('announcementsBtn').onclick=showAnnouncements;
+
 supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
 boot();
 </script>
 
-<script id="announcements-only-js">
-(function(){
-  async function loadAnnouncements(){
-    if(typeof supabase==='undefined') return [];
-    const {data,error}=await supabase.from('announcements')
-      .select('id,title,body,audience,priority,active,created_at,created_by')
-      .eq('active',true)
-      .order('created_at',{ascending:false});
-    if(error){ console.error('Announcements:',error); return []; }
-    return data||[];
-  }
 
-  function visible(a){
-    const role=(typeof profile!=='undefined'&&profile?.role)||'employee';
-    if(a.audience==='everyone') return true;
-    if(a.audience==='managers') return role==='manager'||role==='owner';
-    if(a.audience==='employees') return role==='employee';
-    return true;
-  }
-
-  function escA(s){
-    return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-  }
-
-  async function showAnnouncements(){
-    const role=(typeof profile!=='undefined'&&profile?.role)||'';
-    const items=(await loadAnnouncements()).filter(visible);
-    const rows=items.length?items.map(a=>`
-      <div class="announcement-item">
-        <div class="announcement-title">${escA(a.title||'Announcement')}</div>
-        <div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div>
-        <div class="announcement-body">${escA(a.body||'')}</div>
-      </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
-
-    const ownerForm=role==='owner'?`
-      <div class="announcement-compose">
-        <input id="annTitleOnly" placeholder="Title">
-        <textarea id="annBodyOnly" placeholder="Write your announcement..."></textarea>
-        <select id="annAudienceOnly">
-          <option value="everyone">Everyone</option>
-          <option value="employees">Employees</option>
-          <option value="managers">Managers</option>
-        </select>
-        <select id="annPriorityOnly">
-          <option value="normal">Normal</option>
-          <option value="important">Important</option>
-          <option value="urgent">Urgent</option>
-        </select>
-        <button class="btn gold" id="publishAnnouncementOnly" type="button">Publish Announcement</button>
-      </div>`:'';
-
-    openModal('ANNOUNCEMENTS',`
-      <section class="card announcement-card">
-        ${ownerForm}
-        <div class="announcement-list" style="margin-top:14px">${rows}</div>
-      </section>`);
-
-    const publish=$('publishAnnouncementOnly');
-    if(publish){
-      publish.onclick=async()=>{
-        const title=$('annTitleOnly').value.trim();
-        const body=$('annBodyOnly').value.trim();
-        if(!title||!body) return toast('Title and message are required');
-        const {error}=await supabase.from('announcements').insert({
-          title,body,
-          audience:$('annAudienceOnly').value,
-          priority:$('annPriorityOnly').value,
-          active:true,
-          created_by:profile.id
-        });
-        if(error) return toast(error.message);
-        toast('Announcement published');
-        closeModal();
-      };
-    }
-  }
-
-  function installAnnouncements(){
-    const btn=$('announcementsBtn');
-    if(btn) btn.onclick=showAnnouncements;
-  }
-
-  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',installAnnouncements);
-  else installAnnouncements();
-})();
-</script>
 </body>
 </html>
