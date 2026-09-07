@@ -228,7 +228,10 @@ function renderShell() {
 
 function show(t) {
   tab=t;
-  ['dashboard','availability','photos','employees','settings'].forEach(x=>$(x)?.classList.toggle('hidden',x!==t));
+  ['dashboard','availability','photos','employees','settings'].forEach(x=>{
+    const el=$(x);
+    if(el) el.classList.toggle('hidden',x!==t);
+  });
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   render();
 }
@@ -500,37 +503,47 @@ const translations = {
 let lang = localStorage.getItem('cleaning_ops_lang') || 'en';
 const tr = k => (translations[lang] && translations[lang][k]) || translations.en[k] || k;
 
-async function renderSettings(){
-  $('settings').innerHTML = `
-    <div class="card" style="border:1px solid rgba(238,205,153,.25)">
-      <div class="tiny muted">${tr('preferences')}</div>
-      <h2 style="margin-bottom:6px">${tr('settings')}</h2>
-      <p class="muted" style="margin-top:0">Customize your Cleaning Ops experience.</p>
-      <div class="divider"></div>
 
-      <div style="padding:14px 0">
-        <div class="tiny muted" style="margin-bottom:8px">${tr('language')}</div>
-        <select id="languageSelect" style="width:100%;padding:14px;border-radius:12px;background:#081525;color:#f4eee4;border:1px solid rgba(238,205,153,.35);font-size:15px">
-          <option value="en" ${lang==='en'?'selected':''}>🇺🇸 English</option>
-          <option value="es" ${lang==='es'?'selected':''}>🇪🇸 Español</option>
-        </select>
+
+async function renderSettings(){
+  const box = $('settings');
+  if (!box) return;
+  box.innerHTML = `
+    <div class="card" style="border:1px solid rgba(238,205,153,.30);margin-bottom:16px">
+      <div class="row">
+        <div>
+          <div class="tiny muted">CLEANING OPS</div>
+          <h2 style="margin:5px 0 0">${tr('settings')}</h2>
+        </div>
+        <button id="settingsBack" class="btn secondary" style="width:auto;min-height:40px;padding:0 14px">${tr('back')}</button>
       </div>
     </div>
 
-    <div class="card" style="border:1px solid rgba(238,205,153,.25)">
-      <div class="tiny muted">${tr('account')}</div>
-      <h2 style="margin-bottom:6px">${tr('signedInAs')}</h2>
-      <div style="padding:14px 0">
-        <div style="font-size:18px">${escapeHtml(profile?.full_name || '—')}</div>
-        <div class="muted" style="margin-top:5px">${escapeHtml(session?.user?.email || '')}</div>
-        <div class="badge" style="display:inline-block;margin-top:12px">${isManager()?tr('manager'):tr('employee')}</div>
-      </div>
+    <div class="card">
+      <div class="tiny muted">${tr('preferences')}</div>
+      <h2>${tr('language')}</h2>
+      <p class="muted">Choose the language you want to use in the app.</p>
+      <select id="languageSelect" style="width:100%;padding:14px;border-radius:12px;background:#081525;color:#f4eee4;border:1px solid rgba(238,205,153,.35);font-size:16px">
+        <option value="en" ${lang==='en'?'selected':''}>🇺🇸 English</option>
+        <option value="es" ${lang==='es'?'selected':''}>🇪🇸 Español</option>
+      </select>
+    </div>
 
-      <button id="logoutBtn" class="btn" style="width:100%;margin-top:12px;background:transparent;border:1px solid rgba(210,100,100,.65);color:#f0b1b1">
+    <div class="card">
+      <div class="tiny muted">${tr('account')}</div>
+      <h2>${tr('signedInAs')}</h2>
+      <div class="employee">
+        <strong>${escapeHtml(profile?.full_name || '—')}</strong>
+        <div class="muted" style="margin-top:5px">${escapeHtml(session?.user?.email || '')}</div>
+        <div class="badge" style="display:inline-block;margin-top:10px">${isManager()?tr('manager'):tr('employee')}</div>
+      </div>
+      <button id="logoutBtn" class="btn" style="width:100%;margin-top:16px;background:transparent;border:1px solid rgba(210,100,100,.7);color:#f0b1b1;font-weight:700">
         🚪 ${tr('signOut')}
       </button>
     </div>
   `;
+
+  $('settingsBack').onclick = ()=>show('dashboard');
 
   $('languageSelect').onchange = async e => {
     lang=e.target.value;
