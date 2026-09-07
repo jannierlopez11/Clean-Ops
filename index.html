@@ -71,17 +71,68 @@ function loginScreen(message='') {
   $('login').innerHTML = `
     <div class="loginBox">
       <div class="brand">CLEANING OPS</div>
-      <p>Clean work. Clear standards.</p>
+      <p>Restaurant Cleaning Management</p>
       <div class="card" style="margin-top:25px;text-align:left">
         ${message ? `<div class="employee" style="border-color:rgba(215,123,123,.5);margin-bottom:14px">${escapeHtml(message)}</div>` : ''}
         <div class="field"><label>Email<input id="email" type="email" autocomplete="username" placeholder="name@email.com"></label></div>
         <div class="field"><label>Password<input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></label></div>
         <button class="btn gold" id="loginBtn">Sign In</button>
+        <button class="btn secondary" id="signupBtn" style="margin-top:10px">Employee Sign Up</button>
         <button class="btn secondary" id="resetBtn" style="margin-top:10px">Forgot Password</button>
+        <div class="muted" style="text-align:center;font-size:12px;margin-top:14px">
+          Employees create their own account. Your manager will assign your restaurant and schedule after signup.
+        </div>
       </div>
     </div>`;
   $('loginBtn').onclick = signIn;
+  $('signupBtn').onclick = signupScreen;
   $('resetBtn').onclick = resetPassword;
+}
+
+function signupScreen(message='') {
+  $('login').innerHTML = `
+    <div class="loginBox">
+      <div class="brand">CLEANING OPS</div>
+      <p>Create your employee account</p>
+      <div class="card" style="margin-top:25px;text-align:left">
+        ${message ? `<div class="employee" style="border-color:rgba(215,123,123,.5);margin-bottom:14px">${escapeHtml(message)}</div>` : ''}
+        <div class="field"><label>Full Name<input id="signupName" type="text" autocomplete="name" placeholder="Your full name"></label></div>
+        <div class="field"><label>Email<input id="signupEmail" type="email" autocomplete="email" placeholder="name@email.com"></label></div>
+        <div class="field"><label>Password<input id="signupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label></div>
+        <div class="field"><label>Confirm Password<input id="signupConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label></div>
+        <button class="btn gold" id="createAccountBtn">Create Employee Account</button>
+        <button class="btn secondary" id="backLoginBtn" style="margin-top:10px">Back to Sign In</button>
+      </div>
+    </div>`;
+  $('createAccountBtn').onclick = signUp;
+  $('backLoginBtn').onclick = () => loginScreen();
+}
+
+async function signUp() {
+  const name = $('signupName')?.value.trim();
+  const email = $('signupEmail')?.value.trim();
+  const password = $('signupPassword')?.value;
+  const confirm = $('signupConfirm')?.value;
+  if (!name || !email || !password) return signupScreen('Please complete every field.');
+  if (password.length < 6) return signupScreen('Password must be at least 6 characters.');
+  if (password !== confirm) return signupScreen('Passwords do not match.');
+
+  $('createAccountBtn').disabled = true;
+  const {data,error} = await supabase.auth.signUp({
+    email,
+    password,
+    options: { data: { full_name: name } }
+  });
+  $('createAccountBtn').disabled = false;
+
+  if (error) return signupScreen(error.message);
+
+  if (data.session) {
+    session = data.session;
+    await boot();
+  } else {
+    loginScreen('Account created! Check your email to confirm your account, then sign in.');
+  }
 }
 
 async function signIn() {
@@ -423,7 +474,7 @@ async function renderEmployees(){
   if(!isManager()) return;
   await loadBaseData();
   $('employees').innerHTML=`<div class="card"><div class="tiny muted">Team management</div><h2>EMPLOYEES</h2>
-    <p class="muted">Employee accounts are managed securely through Supabase Auth. Once an employee account exists, it appears here automatically.</p>
+    <p class="muted">Employees can create their own accounts from the Sign In screen. Once an employee account is created, it appears here automatically.</p>
     <div class="divider"></div>
     ${employees.length?employees.map(e=>`<div class="employee"><div class="row"><div><strong>${escapeHtml(e.full_name||'Unnamed employee')}</strong>
       <div class="muted" style="margin-top:4px">${e.active===false?'Inactive':'Active'} • ${escapeHtml(e.id.slice(0,8))}…</div></div>
