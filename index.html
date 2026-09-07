@@ -78,7 +78,8 @@ function loginScreen(message='') {
         <div class="field"><label>Password<input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></label></div>
         <button class="btn gold" id="loginBtn">Sign In</button>
         <button class="btn secondary" id="signupBtn" style="margin-top:10px">Employee Sign Up</button>
-        <button class="btn secondary" id="resetBtn" style="margin-top:10px">Forgot Password</button>
+        <button class="btn secondary" id="resetBtn" style="margin-top:10px">${tr('forgot')}</button>
+        <button class="btn secondary" id="loginLangBtn" style="margin-top:10px">🌐 ${lang==='es'?'English':'Español'}</button>
         <div class="muted" style="text-align:center;font-size:12px;margin-top:14px">
           Employees create their own account. Your manager will assign your restaurant and schedule after signup.
         </div>
@@ -87,6 +88,11 @@ function loginScreen(message='') {
   $('loginBtn').onclick = signIn;
   $('signupBtn').onclick = signupScreen;
   $('resetBtn').onclick = resetPassword;
+  $('loginLangBtn').onclick = ()=>{
+    lang = lang==='en'?'es':'en';
+    localStorage.setItem('cleaning_ops_lang',lang);
+    loginScreen();
+  };
 }
 
 function signupScreen(message='') {
@@ -101,11 +107,17 @@ function signupScreen(message='') {
         <div class="field"><label>Password<input id="signupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label></div>
         <div class="field"><label>Confirm Password<input id="signupConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label></div>
         <button class="btn gold" id="createAccountBtn">Create Employee Account</button>
-        <button class="btn secondary" id="backLoginBtn" style="margin-top:10px">Back to Sign In</button>
+        <button class="btn secondary" id="backLoginBtn" style="margin-top:10px">${tr('backSignIn')}</button>
+        <button class="btn secondary" id="signupLangBtn" style="margin-top:10px">🌐 ${lang==='es'?'English':'Español'}</button>
       </div>
     </div>`;
   $('createAccountBtn').onclick = signUp;
   $('backLoginBtn').onclick = () => loginScreen();
+  $('signupLangBtn').onclick = ()=>{
+    lang = lang==='en'?'es':'en';
+    localStorage.setItem('cleaning_ops_lang',lang);
+    signupScreen();
+  };
 }
 
 async function signUp() {
@@ -195,20 +207,28 @@ function renderShell() {
   $('app').classList.remove('hidden');
   $('nav').classList.remove('hidden');
   $('heroSub').textContent = `${isManager()?'Manager':'Employee'} • ${profile.full_name || session.user.email}`;
+  // Make the v4 top-right circle a settings button.
+  const settingsCircle = document.querySelector('.hero .circle, header .circle, .topCircle');
+  if (settingsCircle) {
+    settingsCircle.textContent = '⚙';
+    settingsCircle.setAttribute('aria-label','Settings');
+    settingsCircle.style.cursor='pointer';
+    settingsCircle.onclick=()=>show('settings');
+  }
   $('nav').innerHTML = isManager()
-    ? `<button data-tab="dashboard"><span class="navico">⌂</span>Dashboard</button>
-       <button data-tab="availability"><span class="navico">◷</span>Schedule</button>
-       <button data-tab="employees"><span class="navico">♙</span>Employees</button>
-       <button data-tab="photos"><span class="navico">⌾</span>Photos</button>`
-    : `<button data-tab="dashboard"><span class="navico">⌂</span>My Job</button>
-       <button data-tab="availability"><span class="navico">◷</span>Schedule</button>
-       <button data-tab="photos"><span class="navico">⌾</span>Photos</button>`;
+    ? `<button data-tab="dashboard"><span class="navico">⌂</span>${tr('dashboard')}</button>
+       <button data-tab="availability"><span class="navico">◷</span>${tr('schedule')}</button>
+       <button data-tab="employees"><span class="navico">♙</span>${tr('employees')}</button>
+       <button data-tab="photos"><span class="navico">⌾</span>${tr('photos')}</button>`
+    : `<button data-tab="dashboard"><span class="navico">⌂</span>${lang==='es'?'Mi trabajo':'My Job'}</button>
+       <button data-tab="availability"><span class="navico">◷</span>${tr('schedule')}</button>
+       <button data-tab="photos"><span class="navico">⌾</span>${tr('photos')}</button>`;
   document.querySelectorAll('#nav [data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
 }
 
 function show(t) {
   tab=t;
-  ['dashboard','availability','photos','employees'].forEach(x=>$(x).classList.toggle('hidden',x!==t));
+  ['dashboard','availability','photos','employees','settings'].forEach(x=>$(x)?.classList.toggle('hidden',x!==t));
   document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
   render();
 }
@@ -218,6 +238,7 @@ async function render() {
   if (tab==='availability') await renderSchedule();
   if (tab==='photos') await renderPhotos();
   if (tab==='employees') await renderEmployees();
+  if (tab==='settings') await renderSettings();
 }
 
 function quick() {
@@ -226,6 +247,7 @@ function quick() {
     <button data-tabq="availability"><span class="ico">◷</span>Schedule</button>
     ${isManager()?'<button data-tabq="employees"><span class="ico">♙</span>Employees</button>':''}
     <button data-tabq="photos"><span class="ico">⌾</span>Photos</button>
+    <button data-tabq="settings"><span class="ico">⚙</span>${tr('settings')}</button>
   </div>`;
 }
 
@@ -416,6 +438,103 @@ async function assignEmployee(){
   await renderDash();
 }
 
+
+const translations = {
+  en: {
+    settings:'SETTINGS', preferences:'Preferences', language:'Language',
+    english:'English', spanish:'Español', account:'Account', signedInAs:'Signed in as',
+    signOut:'Sign Out', save:'Save', back:'Back', languageSaved:'Language saved ✓',
+    dashboard:'Dashboard', schedule:'Schedule', employees:'Employees', photos:'Photos',
+    checklist:'Checklist', noRestaurant:'NO RESTAURANT SCHEDULED',
+    noRestaurantText:'There is no active restaurant scheduled for today.',
+    todayAssignment:"TODAY’S ASSIGNMENT", assignedEmployee:'Assigned employee',
+    assign:'Assign', cleaningChecklist:'CLEANING CHECKLIST', completeJob:'Complete Job',
+    waiting:'WAITING FOR ASSIGNMENT',
+    waitingManager:'Assign an employee to this restaurant for today.',
+    waitingEmployee:'Your manager has not assigned you to this restaurant yet.',
+    jobDocs:'Job documentation', before:'Before Cleaning', after:'After Cleaning',
+    takePhoto:'Take Photo', replace:'Replace', pending:'Pending', submitted:'Submitted ✓',
+    uploadPhotos:'Upload Photos', noJob:'No job is assigned to you today.',
+    teamManagement:'Team management', employeeAccounts:'EMPLOYEES',
+    selfSignup:'Employees can create their own accounts from the Sign In screen. Once an employee account is created, it appears here automatically.',
+    noEmployees:'No employees yet.', managerTools:'Manager tools', assignments:'ASSIGNMENTS',
+    assignmentText:'Use the Dashboard to assign employees to today’s restaurant. Multiple employees can be assigned to the same restaurant.',
+    weekly:'Weekly schedule', restaurantSchedule:'RESTAURANT SCHEDULE',
+    connected:'CONNECTED', connectedText:'Changes made in Supabase are now shared across devices. Employee assignments and job progress are stored in the cloud.',
+    restaurantScheduleText:"Your team's weekly restaurant schedule.",
+    employee:'Employee', manager:'Manager', signIn:'Sign In', employeeSignup:'Employee Sign Up',
+    forgot:'Forgot Password', createAccount:'Create Employee Account', backSignIn:'Back to Sign In',
+    fullName:'Full Name', email:'Email', password:'Password', confirmPassword:'Confirm Password',
+    signupText:'Create your employee account', restaurantCleaning:'Restaurant Cleaning Management',
+    accountCreated:'Account created! Check your email to confirm your account, then sign in.'
+  },
+  es: {
+    settings:'CONFIGURACIÓN', preferences:'Preferencias', language:'Idioma',
+    english:'English', spanish:'Español', account:'Cuenta', signedInAs:'Sesión iniciada como',
+    signOut:'Cerrar sesión', save:'Guardar', back:'Atrás', languageSaved:'Idioma guardado ✓',
+    dashboard:'Inicio', schedule:'Horario', employees:'Empleados', photos:'Fotos',
+    checklist:'Lista', noRestaurant:'NO HAY RESTAURANTE PROGRAMADO',
+    noRestaurantText:'No hay un restaurante activo programado para hoy.',
+    todayAssignment:'ASIGNACIÓN DE HOY', assignedEmployee:'Empleado asignado',
+    assign:'Asignar', cleaningChecklist:'LISTA DE LIMPIEZA', completeJob:'Completar trabajo',
+    waiting:'ESPERANDO ASIGNACIÓN',
+    waitingManager:'Asigna un empleado a este restaurante para hoy.',
+    waitingEmployee:'Tu gerente todavía no te ha asignado a este restaurante.',
+    jobDocs:'Documentación del trabajo', before:'Antes de limpiar', after:'Después de limpiar',
+    takePhoto:'Tomar foto', replace:'Reemplazar', pending:'Pendiente', submitted:'Enviada ✓',
+    uploadPhotos:'Subir fotos', noJob:'No tienes un trabajo asignado para hoy.',
+    teamManagement:'Gestión del equipo', employeeAccounts:'EMPLEADOS',
+    selfSignup:'Los empleados pueden crear su propia cuenta desde la pantalla de inicio de sesión. Cuando se cree, aparecerá aquí automáticamente.',
+    noEmployees:'No hay empleados todavía.', managerTools:'Herramientas del gerente', assignments:'ASIGNACIONES',
+    assignmentText:'Usa Inicio para asignar empleados al restaurante de hoy. Puedes asignar varios empleados al mismo restaurante.',
+    weekly:'Horario semanal', restaurantSchedule:'HORARIO DE RESTAURANTES',
+    connected:'CONECTADO', connectedText:'Los cambios de Supabase se comparten entre dispositivos. Las asignaciones y el progreso se guardan en la nube.',
+    restaurantScheduleText:'Horario semanal de los restaurantes.',
+    employee:'Empleado', manager:'Gerente', signIn:'Iniciar sesión', employeeSignup:'Registro de empleado',
+    forgot:'Olvidé mi contraseña', createAccount:'Crear cuenta de empleado', backSignIn:'Volver a iniciar sesión',
+    fullName:'Nombre completo', email:'Correo electrónico', password:'Contraseña', confirmPassword:'Confirmar contraseña',
+    signupText:'Crea tu cuenta de empleado', restaurantCleaning:'Gestión de limpieza de restaurantes',
+    accountCreated:'¡Cuenta creada! Revisa tu correo para confirmar la cuenta y luego inicia sesión.'
+  }
+};
+let lang = localStorage.getItem('cleaning_ops_lang') || 'en';
+const tr = k => (translations[lang] && translations[lang][k]) || translations.en[k] || k;
+
+async function renderSettings(){
+  $('settings').innerHTML = `
+    <div class="card">
+      <div class="tiny muted">${tr('preferences')}</div>
+      <h2>${tr('settings')}</h2>
+      <div class="divider"></div>
+      <div class="row">
+        <div><strong>${tr('language')}</strong><div class="muted" style="margin-top:4px">${lang==='es'?tr('spanish'):tr('english')}</div></div>
+        <select id="languageSelect" style="width:auto;min-width:150px;padding:12px;border-radius:12px;background:#081525;color:#f4eee4;border:1px solid rgba(238,205,153,.35)">
+          <option value="en" ${lang==='en'?'selected':''}>English</option>
+          <option value="es" ${lang==='es'?'selected':''}>Español</option>
+        </select>
+      </div>
+    </div>
+    <div class="card">
+      <div class="tiny muted">${tr('account')}</div>
+      <h2>${tr('signedInAs')}</h2>
+      <p>${escapeHtml(profile?.full_name || session?.user?.email || '')}</p>
+      <p class="muted">${escapeHtml(session?.user?.email || '')}</p>
+      <button id="logoutBtn" class="btn secondary" style="margin-top:10px">${tr('signOut')}</button>
+    </div>
+  `;
+  $('languageSelect').onchange = async e => {
+    lang=e.target.value;
+    localStorage.setItem('cleaning_ops_lang',lang);
+    toast(tr('languageSaved'));
+    renderShell();
+    await render();
+  };
+  $('logoutBtn').onclick = async ()=>{
+    await supabase.auth.signOut();
+    toast(lang==='es'?'Sesión cerrada':'Signed out');
+  };
+}
+
 async function renderSchedule(){
   const rows=restaurants.map(r=>`<div class="task"><span>${escapeHtml(r.name)}</span><span style="margin-left:auto;color:var(--gold2)">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][r.weekday]} • ${formatTime(r.start_time)}</span></div>`).join('');
   $('availability').innerHTML=`<div class="card"><div class="tiny muted">Weekly schedule</div><h2>RESTAURANT SCHEDULE</h2><p class="muted">${isManager()?'Your current restaurant schedule. Restaurant editing will be added to the manager tools.':'Your team’s weekly restaurant schedule.'}</p>${rows||'<div class="muted">No restaurants found.</div>'}</div>
@@ -490,6 +609,11 @@ supabase.auth.onAuthStateChange(async (_event, s)=>{
 });
 
 boot();
+
+document.addEventListener('click', (e)=>{
+  const el=e.target.closest('.circle, .topCircle, .heroCircle, .settingsCircle');
+  if(el && !el.closest('#nav')) show('settings');
+});
 </script>
 
 </body></html>
