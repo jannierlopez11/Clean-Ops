@@ -116,6 +116,25 @@ nav button,.bottom-nav button,.tabbar button{
 img.logo,.logo img{max-height:42px!important;width:auto!important}
 </style>
 
+
+<style id="co-v8-manager">
+.v8-control{margin:8px 0 90px}
+.v8-toolbar{display:flex;gap:7px;margin:10px 0}
+.v8-toolbar input{flex:1;background:#111824!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;padding:10px!important}
+.v8-pill{font-size:9px;color:#d4ae4c;background:#151c29;border:1px solid rgba(212,174,76,.22);border-radius:99px;padding:6px 8px}
+.v8-admin-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
+.v8-admin-card{background:#111824;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px;text-align:left}
+.v8-admin-card b{display:block;font-size:12px}.v8-admin-card span{display:block;color:#8f98a8;font-size:8px;margin-top:3px}
+.v8-admin-section{margin-top:16px}.v8-admin-section h3{font-size:10px!important;letter-spacing:.13em;margin:0 0 7px!important}
+.v8-admin-row{display:flex;align-items:center;gap:9px;padding:10px;background:#101622;border:1px solid rgba(255,255,255,.07);border-radius:11px;margin:6px 0}
+.v8-admin-row-main{flex:1;min-width:0}.v8-admin-row-main b{font-size:11px;display:block}.v8-admin-row-main span{font-size:8px;color:#8f98a8;display:block;margin-top:2px}
+.v8-admin-row button{min-height:31px!important;padding:6px 8px!important;font-size:9px!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.08)!important}
+.v8-admin-row button.gold{color:#d4ae4c!important;border-color:rgba(212,174,76,.25)!important}
+.v8-editor{display:grid;gap:8px}.v8-editor label{font-size:9px;color:#8f98a8;letter-spacing:.06em}.v8-editor input,.v8-editor select,.v8-editor textarea{width:100%;margin-top:4px;background:#151c29!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;padding:10px!important}
+.v8-actions{display:flex;gap:7px;margin-top:8px}.v8-actions button{flex:1}
+.v8-danger{background:#54272c!important;color:#f0c9cb!important;border:1px solid rgba(143,61,67,.5)!important}
+</style>
+
 </head>
 <body><div class="app">
 <header class="hero"><div class="heroRow"><div><div class="brand">CLEANING OPS</div><div class="eyebrow">RESTAURANT CLEANING MANAGEMENT</div></div><div style="color:var(--gold2);font-size:28px">◯</div></div><div class="role" id="heroSub">Manager • User</div></header>
@@ -1404,6 +1423,152 @@ button{cursor:pointer}
  V.showChecklist=function(){this.sheet(`<div class="v7-menu-head"><b>CHECKLIST MANAGEMENT</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div><div class="v7-empty">Detailed checklist data is connected to Supabase. Restaurant-specific equipment, required items, rotations and mandatory bathrooms will be managed here next.</div>`)};
  V.logout=async function(){if(this.sb)await this.sb.auth.signOut();location.reload()};
  document.addEventListener('DOMContentLoaded',()=>{build();let n=0;const t=setInterval(()=>{n++;if(window.supabaseClient){clearInterval(t);V.init()}if(n>30)clearInterval(t)},500)});
+})();
+</script>
+
+
+<script id="co-v8-manager-js">
+(function(){
+ const M={
+  sb:null, employees:[], restaurants:[], assignments:[],
+  async load(){
+   if(!window.supabaseClient)return;
+   this.sb=window.supabaseClient;
+   const {data:{user}}=await this.sb.auth.getUser();
+   if(!user)return;
+   const {data:p}=await this.sb.from('profiles').select('*').eq('id',user.id).single();
+   if(!p || !['manager','owner'].includes(p.role)) return;
+   const [e,r,a]=await Promise.all([
+    this.sb.from('profiles').select('*').eq('role','employee').order('full_name'),
+    this.sb.from('restaurants').select('*').order('name'),
+    this.sb.from('employee_assignments').select('*')
+   ]);
+   if(e.error||r.error||a.error){console.warn(e.error||r.error||a.error);return}
+   this.employees=e.data||[];this.restaurants=r.data||[];this.assignments=a.data||[];
+   this.mount();
+  },
+  esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))},
+  mount(){
+   if(document.getElementById('v8Control'))return;
+   const host=document.createElement('section');host.id='v8Control';host.className='v8-control';
+   host.innerHTML=`
+    <div class="v7-section-head"><h2>MANAGER CONTROL CENTER</h2><span class="v8-pill">LIVE</span></div>
+    <div class="v8-admin-grid">
+      <button class="v8-admin-card" onclick="V8.employeesPanel()"><b>Employees</b><span>${this.employees.length} accounts</span></button>
+      <button class="v8-admin-card" onclick="V8.restaurantsPanel()"><b>Restaurants</b><span>${this.restaurants.length} locations</span></button>
+      <button class="v8-admin-card" onclick="V8.assignmentsPanel()"><b>Assignments</b><span>${this.assignments.length} active</span></button>
+      <button class="v8-admin-card" onclick="V8.checklistPanel()"><b>Checklist</b><span>Configure operations</span></button>
+    </div>
+    <div class="v8-admin-section"><h3>EMPLOYEE MANAGEMENT</h3><div id="v8EmployeeRows"></div></div>
+    <div class="v8-admin-section"><h3>RESTAURANT MANAGEMENT</h3><div id="v8RestaurantRows"></div></div>`;
+   const mgr=document.getElementById('v7Manager');
+   (mgr||document.querySelector('main')||document.body).appendChild(host);
+   this.render();
+  },
+  render(){
+   const er=document.getElementById('v8EmployeeRows'),rr=document.getElementById('v8RestaurantRows');
+   if(er)er.innerHTML=this.employees.slice(0,5).map(e=>this.employeeRow(e)).join('')||'<div class="v7-empty">No employees yet.</div>';
+   if(rr)rr.innerHTML=this.restaurants.slice(0,5).map(r=>this.restaurantRow(r)).join('')||'<div class="v7-empty">No restaurants yet.</div>';
+  },
+  employeeRow(e){
+   const n=this.assignments.filter(a=>a.employee_id===e.id).length;
+   return `<div class="v8-admin-row"><div class="v7-dot"></div><div class="v8-admin-row-main"><b>${this.esc(e.full_name||'Employee')}</b><span>${n} assignment${n===1?'':'s'} · ${e.active===false?'Inactive':'Active'}</span></div><button class="gold" onclick="V8.editEmployee('${e.id}')">Manage</button></div>`;
+  },
+  restaurantRow(r){
+   return `<div class="v8-admin-row"><div class="v7-dot"></div><div class="v8-admin-row-main"><b>${this.esc(r.name)}</b><span>${this.esc(r.service_day||'')} ${this.esc(r.service_time||'')}</span></div><button class="gold" onclick="V8.editRestaurant('${r.id}')">Edit</button></div>`;
+  },
+  sheet(title,body){
+   const s=document.getElementById('v7Sheet');
+   document.getElementById('v7SheetContent').innerHTML=`<div class="v7-menu-head"><b>${title}</b><button class="v7-menu-close" onclick="V8.close()">×</button></div>${body}`;
+   s.classList.add('open');
+  },
+  close(){document.getElementById('v7Sheet')?.classList.remove('open')},
+  employeesPanel(){
+   this.sheet('EMPLOYEES',`<div class="v8-toolbar"><input placeholder="Search employees…" oninput="V8.filterEmployees(this.value)"></div><div id="v8AllRows" class="v7-list"></div>`);
+   this.filterEmployees('');
+  },
+  filterEmployees(q){
+   const box=document.getElementById('v8AllRows');if(!box)return;
+   const list=this.employees.filter(e=>(e.full_name||'').toLowerCase().includes((q||'').toLowerCase()));
+   box.innerHTML=list.map(e=>this.employeeRow(e)).join('')||'<div class="v7-empty">No employees found.</div>';
+  },
+  editEmployee(id){
+   const e=this.employees.find(x=>x.id===id);if(!e)return;
+   const as=this.assignments.filter(a=>a.employee_id===id);
+   this.sheet('EMPLOYEE MANAGEMENT',`
+    <div class="v7-grid">
+      <div class="v7-card"><div class="v7-card-label">Employee</div><div class="v7-card-value" style="font-size:15px">${this.esc(e.full_name||'Employee')}</div></div>
+      <div class="v7-card"><div class="v7-card-label">Status</div><div class="v7-card-value" style="font-size:15px">${e.active===false?'Inactive':'Active'}</div></div>
+    </div>
+    <div class="v8-admin-section"><h3>RESTAURANT ASSIGNMENTS</h3><div>${as.length?as.map(a=>`<div class="v8-admin-row"><div class="v8-admin-row-main"><b>${this.esc(this.restaurants.find(r=>r.id===a.restaurant_id)?.name||'Restaurant')}</b></div><button onclick="V8.removeAssignment('${a.id}','${id}')">Remove</button></div>`).join(''):'<div class="v7-empty">No assignments.</div>'}</div>
+    <div class="v8-editor"><label>ASSIGN RESTAURANT<select id="v8Assign"><option value="">Select restaurant…</option>${this.restaurants.map(r=>`<option value="${r.id}">${this.esc(r.name)}</option>`).join('')}</select></label><button class="v7-primary" onclick="V8.assign('${id}')">Assign Restaurant</button></div>
+    <div class="v8-actions"><button class="v7-secondary" onclick="V8.toggle('${id}',${e.active!==false})">${e.active===false?'Activate':'Deactivate'} Account</button><button class="v7-secondary" onclick="V8.employeeHistory('${id}')">Work History</button></div>`);
+  },
+  async assign(empId){
+   const rid=document.getElementById('v8Assign')?.value;if(!rid)return;
+   if(this.assignments.some(a=>a.employee_id===empId&&a.restaurant_id===rid)){alert('Already assigned.');return}
+   const {data,error}=await this.sb.from('employee_assignments').insert({employee_id:empId,restaurant_id:rid}).select().single();
+   if(error){alert(error.message);return}
+   this.assignments.push(data);this.editEmployee(empId);this.render();
+  },
+  async removeAssignment(aid,empId){
+   const {error}=await this.sb.from('employee_assignments').delete().eq('id',aid);
+   if(error){alert(error.message);return}
+   this.assignments=this.assignments.filter(a=>a.id!==aid);this.editEmployee(empId);this.render();
+  },
+  async toggle(id,current){
+   const {error}=await this.sb.from('profiles').update({active:!current}).eq('id',id);
+   if(error){alert(error.message);return}
+   const e=this.employees.find(x=>x.id===id);if(e)e.active=!current;this.editEmployee(id);this.render();
+  },
+  async employeeHistory(id){
+   const [t,p,c]=await Promise.all([
+    this.sb.from('time_entries').select('*').eq('employee_id',id).order('clock_in',{ascending:false}).limit(30),
+    this.sb.from('job_photos').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30),
+    this.sb.from('completion_signatures').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30)
+   ]);
+   this.sheet('WORK HISTORY',`<div class="v7-grid"><div class="v7-card"><div class="v7-card-label">Time entries</div><div class="v7-card-value">${(t.data||[]).length}</div></div><div class="v7-card"><div class="v7-card-label">Photos</div><div class="v7-card-value">${(p.data||[]).length}</div></div><div class="v7-card"><div class="v7-card-label">Signatures</div><div class="v7-card-value">${(c.data||[]).length}</div></div></div><div class="v7-empty" style="margin-top:10px">Detailed history records will appear here as employees complete jobs.</div>`);
+  },
+  restaurantsPanel(){
+   this.sheet('RESTAURANTS',`<button class="v7-primary" style="width:100%;margin-bottom:9px" onclick="V8.newRestaurant()">Add Restaurant</button><div class="v7-list">${this.restaurants.map(r=>this.restaurantRow(r)).join('')}</div>`);
+  },
+  editRestaurant(id){
+   const r=this.restaurants.find(x=>x.id===id);if(!r)return;
+   this.sheet('EDIT RESTAURANT',`<div class="v8-editor"><label>NAME<input id="v8RN" value="${this.esc(r.name)}"></label><label>SERVICE DAY<input id="v8RD" value="${this.esc(r.service_day||'')}"></label><label>SERVICE TIME<input id="v8RT" value="${this.esc(r.service_time||'')}"></label><button class="v7-primary" onclick="V8.saveRestaurant('${id}')">Save Changes</button></div><div class="v8-actions"><button class="v7-secondary" onclick="V8.restaurantChecklist('${id}')">Checklist Setup</button><button class="v7-secondary" onclick="V8.restaurantBathrooms('${id}')">Bathrooms</button></div>`);
+  },
+  newRestaurant(){
+   this.sheet('ADD RESTAURANT',`<div class="v8-editor"><label>NAME<input id="v8RN" placeholder="Restaurant name"></label><label>SERVICE DAY<input id="v8RD" placeholder="Monday"></label><label>SERVICE TIME<input id="v8RT" placeholder="4:00 AM"></label><button class="v7-primary" onclick="V8.createRestaurant()">Create Restaurant</button></div>`);
+  },
+  async saveRestaurant(id){
+   const patch={name:document.getElementById('v8RN').value.trim(),service_day:document.getElementById('v8RD').value.trim(),service_time:document.getElementById('v8RT').value.trim()};
+   const {error}=await this.sb.from('restaurants').update(patch).eq('id',id);if(error){alert(error.message);return}
+   await this.load();this.restaurantsPanel();
+  },
+  async createRestaurant(){
+   const patch={name:document.getElementById('v8RN').value.trim(),service_day:document.getElementById('v8RD').value.trim(),service_time:document.getElementById('v8RT').value.trim()};
+   if(!patch.name){alert('Restaurant name is required.');return}
+   const {error}=await this.sb.from('restaurants').insert(patch);if(error){alert(error.message);return}
+   await this.load();this.restaurantsPanel();
+  },
+  assignmentsPanel(){
+   this.sheet('ASSIGNMENTS',`<div class="v7-empty">All active employee-to-restaurant assignments are managed from each employee profile.</div>`);
+  },
+  checklistPanel(){
+   this.sheet('CHECKLIST MANAGEMENT',`<div class="v7-list">
+    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Equipment & Areas</b><span>Kitchen, refrigeration, washing, surfaces, ventilation, floors, bar, exterior</span></div><button class="gold" onclick="V8.restaurantChecklist(null)">Open</button></div>
+    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Bathrooms</b><span>Mandatory every service day</span></div><button class="gold" onclick="V8.restaurantBathrooms(null)">Open</button></div>
+    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Rotations</b><span>Weekly cleaning rotation foundation</span></div><button class="gold" onclick="alert('Rotation editor is the next checklist-management step.')">Open</button></div>
+   </div>`);
+  },
+  restaurantChecklist(id){
+   this.sheet('CHECKLIST SETUP',`<div class="v7-empty">The detailed checklist tables are connected. This editor will let managers choose which equipment and subtasks apply to each restaurant while preserving required bathroom service.</div>`);
+  },
+  restaurantBathrooms(id){
+   this.sheet('BATHROOM SETUP',`<div class="v7-empty">Bathrooms are configured separately and remain mandatory on every service day. Fixture counts can be managed from the restaurant bathroom configuration.</div>`);
+  }
+ };
+ window.V8=M;
+ document.addEventListener('DOMContentLoaded',()=>{let n=0;const t=setInterval(()=>{n++;if(window.supabaseClient){clearInterval(t);M.load()}if(n>30)clearInterval(t)},500)});
 })();
 </script>
 
