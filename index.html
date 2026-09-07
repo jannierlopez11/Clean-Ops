@@ -1041,6 +1041,7 @@ async function showAnnouncements(){
       <div class="announcement-title">${annEsc(a.title)}</div>
       <div class="announcement-meta">${String(a.priority||'normal').toUpperCase()} • ${new Date(a.created_at).toLocaleDateString()}</div>
       <div class="announcement-body">${annEsc(a.body)}</div>
+      ${profile.role==='owner'?`<div style="margin-top:10px"><button class="btn secondary ann-delete" data-id="${a.id}" type="button" style="min-height:40px">Delete</button></div>`:''}
     </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
 
   let ownerForm='';
@@ -1071,6 +1072,21 @@ async function showAnnouncements(){
     body.innerHTML=ownerForm+`<div class="announcement-list" style="margin-top:14px">${rows}</div>`;
     modal.classList.add('open');
   }
+
+  document.querySelectorAll('.ann-delete').forEach(btn=>{
+    btn.onclick=async()=>{
+      const id=btn.dataset.id;
+      if(!id || profile.role!=='owner') return;
+      if(!confirm('Delete this announcement? This cannot be undone.')) return;
+      btn.disabled=true;
+      const {error}=await annSupabase.from('announcements').delete().eq('id',id);
+      if(error){btn.disabled=false; alert(error.message); return;}
+      if(typeof window.toast==='function') window.toast('Announcement deleted');
+      await showAnnouncements();
+      await updateAnnouncementBadge();
+      if(typeof window.renderHome==='function') await window.renderHome();
+    };
+  });
 
   const publish=document.getElementById('publishAnnouncement96');
   if(publish){
