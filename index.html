@@ -269,6 +269,17 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
 #announcementsBtn,#publishAnnouncement{min-height:48px!important;touch-action:manipulation!important}
 </style>
 
+
+<style id="v97-main-announcements">
+.main-announcement{padding:12px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.main-announcement:last-child{border-bottom:0}
+.main-announcement.urgent{border-left:3px solid #a44;padding-left:10px}
+.announcement-priority{font-size:10px;letter-spacing:.12em;opacity:.7}
+.announcement-meta{font-size:11px;opacity:.62;margin-top:4px}
+.announcement-body{font-size:13px;line-height:1.45;margin-top:7px;white-space:pre-wrap}
+#mainAnnouncementsBtn{min-height:42px!important;touch-action:manipulation!important}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -503,18 +514,58 @@ async function loadToday(){
  }
 }
 
+
+async function mainAnnouncements(){
+ try{
+  const role=profile?.role||'employee';
+  const {data,error}=await supabase.from('announcements')
+   .select('id,title,body,audience,priority,created_at')
+   .eq('active',true)
+   .order('created_at',{ascending:false})
+   .limit(20);
+  if(error) return '';
+  const items=(data||[]).filter(a=>{
+   if(a.audience==='everyone')return true;
+   if(a.audience==='employees')return role==='employee';
+   if(a.audience==='managers')return role==='manager'||role==='owner';
+   return false;
+  }).slice(0,3);
+  const badge=items.length?`<span class="announcement-badge">${items.length}</span>`:'';
+  const rows=items.length?items.map(a=>`
+   <div class="main-announcement ${a.priority==='urgent'?'urgent':''}">
+    <div class="row">
+     <div class="announcement-title">${esc(a.title)}</div>
+     <span class="announcement-priority">${esc(String(a.priority||'normal').toUpperCase())}</span>
+    </div>
+    <div class="announcement-meta">${new Date(a.created_at).toLocaleDateString()}</div>
+    <div class="announcement-body">${esc(a.body)}</div>
+   </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
+  return `<div class="card announcement-card" style="margin-top:12px">
+   <div class="row">
+    <div><div class="tiny">UPDATES</div><h2 style="margin-top:3px">Announcements ${badge}</h2></div>
+    <button class="btn secondary" id="mainAnnouncementsBtn" type="button" style="min-height:42px">View all</button>
+   </div>
+   <div style="margin-top:8px">${rows}</div>
+  </div>`;
+ }catch(e){return ''}
+}
+
 async function renderHome(){
  await loadToday();
  const r=todayRestaurant();
+ const announcementsHtml=await mainAnnouncements();
  if(!r){
   $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('today')}</div><h1>${T('noRestaurant')}</h1></div>
-  <div class="card"><p>There is no active restaurant scheduled for today.</p></div>`;
+  <div class="card"><p>There is no active restaurant scheduled for today.</p></div>
+  ${announcementsHtml}`;
+  setTimeout(()=>wireMainAnnouncements(),0);
   return;
  }
  const done=tasks.filter(x=>x.completed).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
  const clocked=!!timeEntry&&!timeEntry.clock_out;
  $('content').innerHTML=`
  <div class="hero"><div class="eyebrow">${T('today')}</div><h1>${esc(r.name)}</h1><p>${dayNames[new Date().getDay()]} • ${fmtTime(r.start_time)}</p></div>
+ ${announcementsHtml}
  <div class="grid3">
   <div class="statcard"><div class="statlabel">${T('checklist')}</div><div class="statvalue">${done}/${total}</div></div>
   <div class="statcard"><div class="statlabel">${T('assignment')}</div><div class="statvalue">${assignment?'1':'0'}</div></div>
@@ -532,6 +583,7 @@ async function renderHome(){
   ${tasks.map(x=>`<label class="task ${x.completed?'done':''}"><input type="checkbox" data-task="${x.id}" ${x.completed?'checked':''} ${isManagement()?'disabled':''}><span>${esc(x.task_name)}</span></label>`).join('')}
   ${!isManagement()?`<button class="btn ${pct===100?'gold':''}" id="completeBtn" style="margin-top:10px" ${pct<100?'disabled':''}>${T('complete')}</button>`:''}
  </div>`:`<div class="card"><div class="tiny">${T('assignment')}</div><h2>${T('notAssigned')}</h2><p>${isManagement()?'Assign an employee from Team.':'Your manager has not assigned you to today’s restaurant yet.'}</p></div>`}`;
+ wireMainAnnouncements();
  if($('clockBtn'))$('clockBtn').onclick=clockToggle;
  if($('completeBtn'))$('completeBtn').onclick=completeJob;
  if($('openTeam'))$('openTeam').onclick=()=>showTab('team');
@@ -539,6 +591,17 @@ async function renderHome(){
    const {error}=await supabase.from('checklist_tasks').update({completed:e.target.checked,completed_at:e.target.checked?new Date().toISOString():null}).eq('id',e.target.dataset.task);
    if(error)return toast(error.message);await renderHome();
  });
+}
+
+
+function wireMainAnnouncements(){
+ const b=$('mainAnnouncementsBtn');
+ if(!b)return;
+ b.onclick=()=>{
+  const menu=$('menuBtn');
+  if(menu)menu.click();
+  setTimeout(()=>{$('announcementsBtn')?.click()},60);
+ };
 }
 
 async function clockToggle(){
