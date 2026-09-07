@@ -1031,4 +1031,180 @@ document.addEventListener('DOMContentLoaded',()=>{
 });
 </script>
 
+
+<style id="co-employee-db">
+.co-emp-db{margin:14px 0 90px}
+.co-emp-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}
+.co-emp-head h2{margin:0!important;font-size:17px!important;letter-spacing:.05em}
+.co-emp-head p{margin:3px 0 0!important;color:#9ca3af;font-size:11px!important}
+.co-emp-search{width:100%;background:#111824;border:1px solid rgba(255,255,255,.1);color:#f5ead6;padding:11px 12px;border-radius:11px;margin-bottom:9px}
+.co-emp-list{display:grid;gap:8px}
+.co-emp-card{background:#111824;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px}
+.co-emp-top{display:flex;align-items:center;gap:10px}
+.co-avatar{width:36px;height:36px;border-radius:11px;background:#1b2331;border:1px solid rgba(212,174,76,.35);display:grid;place-items:center;color:#d4ae4c;font-weight:800;font-size:12px;flex:none}
+.co-emp-name{font-weight:700;color:#f5ead6;font-size:13px}
+.co-emp-meta{font-size:10px;color:#8f98a8;margin-top:2px}
+.co-status{margin-left:auto;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 7px;border-radius:99px;background:rgba(82,160,104,.12);color:#9fd0a9}
+.co-status.off{background:rgba(255,255,255,.07);color:#8f98a8}
+.co-emp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
+.co-stat{background:#171e2b;border-radius:9px;padding:8px;text-align:center}
+.co-stat b{display:block;color:#f5ead6;font-size:12px}
+.co-stat span{display:block;color:#8f98a8;font-size:8px;margin-top:2px}
+.co-emp-actions{display:flex;gap:6px;margin-top:9px}
+.co-emp-actions button{flex:1;min-height:34px!important;font-size:10px!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important}
+.co-emp-actions button.primary{color:#d4ae4c!important;border-color:rgba(212,174,76,.3)!important}
+.co-emp-empty{text-align:center;padding:25px 12px;color:#8f98a8;border:1px dashed rgba(255,255,255,.12);border-radius:13px;font-size:12px}
+.co-emp-modal{position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,.68);display:none;align-items:flex-end}
+.co-emp-modal.open{display:flex}
+.co-emp-sheet{width:100%;max-height:86vh;overflow:auto;background:#101622;border-top:1px solid rgba(212,174,76,.25);border-radius:20px 20px 0 0;padding:16px}
+.co-emp-sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
+.co-emp-sheet-head b{font-size:13px;letter-spacing:.1em;color:#f5ead6}
+.co-close{width:34px!important;min-height:34px!important;padding:0!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.1)!important}
+.co-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.co-detail-box{background:#171e2b;border-radius:10px;padding:10px}
+.co-detail-box span{display:block;color:#8f98a8;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
+.co-detail-box b{display:block;color:#f5ead6;font-size:12px;margin-top:3px}
+.co-assign-row{display:flex;gap:7px;margin-top:10px}
+.co-assign-row select{flex:1!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.1)!important}
+.co-assign-row button{min-width:78px!important;background:#d4ae4c!important;color:#0b0f18!important;border:0!important}
+.co-assignment{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#171e2b;border-radius:9px;margin-top:6px;font-size:11px;color:#f5ead6}
+.co-assignment button{min-height:28px!important;width:28px!important;padding:0!important;background:transparent!important;color:#b7aeb0!important;border:0!important}
+</style>
+
+<script id="co-employee-db-js">
+(function(){
+  const E = {
+    employees:[], assignments:[], restaurants:[],
+    async load(){
+      if(!window.supabaseClient) return;
+      const sb=window.supabaseClient;
+      const [p,a,r]=await Promise.all([
+        sb.from('profiles').select('*').order('full_name'),
+        sb.from('employee_assignments').select('*'),
+        sb.from('restaurants').select('*').order('name')
+      ]);
+      if(p.error) throw p.error;
+      this.employees=(p.data||[]).filter(x=>x.role==='employee');
+      this.assignments=a.data||[];
+      this.restaurants=r.data||[];
+      this.render();
+    },
+    initials(n){
+      return String(n||'Employee').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
+    },
+    esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))},
+    assignmentsFor(id){return this.assignments.filter(a=>a.employee_id===id)},
+    restaurantName(id){return this.restaurants.find(r=>r.id===id)?.name||'Unassigned'},
+    render(){
+      let host=document.getElementById('coEmployeeDB');
+      if(!host) return;
+      const q=(document.getElementById('coEmployeeSearch')?.value||'').toLowerCase().trim();
+      const list=this.employees.filter(e=>(e.full_name||'').toLowerCase().includes(q));
+      host.querySelector('.co-emp-list').innerHTML=list.length?list.map(e=>{
+        const as=this.assignmentsFor(e.id);
+        const active=e.active!==false;
+        return `<article class="co-emp-card">
+          <div class="co-emp-top">
+            <div class="co-avatar">${this.initials(e.full_name)}</div>
+            <div><div class="co-emp-name">${this.esc(e.full_name||'Employee')}</div><div class="co-emp-meta">${this.esc(e.role||'employee')}</div></div>
+            <span class="co-status ${active?'':'off'}">${active?'Active':'Inactive'}</span>
+          </div>
+          <div class="co-emp-stats">
+            <div class="co-stat"><b>${as.length}</b><span>ASSIGNMENTS</span></div>
+            <div class="co-stat"><b>${active?'ON':'OFF'}</b><span>ACCOUNT</span></div>
+            <div class="co-stat"><b>—</b><span>HOURS</span></div>
+          </div>
+          <div class="co-emp-actions">
+            <button class="primary" onclick="COEmployees.open('${e.id}')">View employee</button>
+            <button onclick="COEmployees.toggleActive('${e.id}',${active})">${active?'Deactivate':'Activate'}</button>
+          </div>
+        </article>`;
+      }).join(''):`<div class="co-emp-empty">No employees found.</div>`;
+    },
+    async open(id){
+      const e=this.employees.find(x=>x.id===id); if(!e)return;
+      const modal=document.getElementById('coEmpModal');
+      modal.classList.add('open');
+      document.getElementById('coEmpModalBody').innerHTML=`
+        <div class="co-detail-grid">
+          <div class="co-detail-box"><span>Name</span><b>${this.esc(e.full_name||'Employee')}</b></div>
+          <div class="co-detail-box"><span>Status</span><b>${e.active!==false?'Active':'Inactive'}</b></div>
+          <div class="co-detail-box"><span>Role</span><b>${this.esc(e.role||'employee')}</b></div>
+          <div class="co-detail-box"><span>Member since</span><b>${e.created_at?new Date(e.created_at).toLocaleDateString():'—'}</b></div>
+        </div>
+        <div style="margin-top:15px;color:#f5ead6;font-size:11px;font-weight:700;letter-spacing:.08em">RESTAURANT ASSIGNMENTS</div>
+        <div id="coEmpAssignments"></div>
+        <div class="co-assign-row">
+          <select id="coEmpRestaurantSelect"><option value="">Assign restaurant…</option>${this.restaurants.map(r=>`<option value="${r.id}">${this.esc(r.name)}</option>`).join('')}</select>
+          <button onclick="COEmployees.assign('${id}')">Assign</button>
+        </div>
+        <div style="margin-top:15px;color:#8f98a8;font-size:10px;line-height:1.4">
+          Employees create their own accounts. Managers can assign them to one or multiple restaurants here.
+        </div>`;
+      this.renderAssignments(id);
+    },
+    renderAssignments(id){
+      const h=document.getElementById('coEmpAssignments'); if(!h)return;
+      const as=this.assignmentsFor(id);
+      h.innerHTML=as.length?as.map(a=>`<div class="co-assignment"><span>${this.esc(this.restaurantName(a.restaurant_id))}</span><button title="Remove" onclick="COEmployees.removeAssignment('${a.id}','${id}')">×</button></div>`).join(''):`<div style="padding:9px;color:#8f98a8;font-size:10px">No restaurant assignments yet.</div>`;
+    },
+    async assign(empId){
+      const sel=document.getElementById('coEmpRestaurantSelect'), rid=sel?.value;
+      if(!rid)return;
+      const exists=this.assignments.some(a=>a.employee_id===empId&&a.restaurant_id===rid);
+      if(exists){alert('Employee is already assigned to this restaurant.');return}
+      const {data,error}=await window.supabaseClient.from('employee_assignments').insert({employee_id:empId,restaurant_id:rid}).select().single();
+      if(error){alert(error.message);return}
+      this.assignments.push(data); sel.value=''; this.renderAssignments(empId); this.render();
+    },
+    async removeAssignment(aid,empId){
+      const {error}=await window.supabaseClient.from('employee_assignments').delete().eq('id',aid);
+      if(error){alert(error.message);return}
+      this.assignments=this.assignments.filter(a=>a.id!==aid); this.renderAssignments(empId); this.render();
+    },
+    async toggleActive(id,current){
+      const {error}=await window.supabaseClient.from('profiles').update({active:!current}).eq('id',id);
+      if(error){alert(error.message);return}
+      const e=this.employees.find(x=>x.id===id); if(e)e.active=!current; this.render();
+    }
+  };
+  window.COEmployees=E;
+
+  function inject(){
+    if(document.getElementById('coEmployeeDB')) return;
+    const section=document.createElement('section');
+    section.id='coEmployeeDB'; section.className='co-emp-db';
+    section.innerHTML=`
+      <div class="co-emp-head"><div><h2>EMPLOYEES</h2><p>Employee database & assignments</p></div></div>
+      <input id="coEmployeeSearch" class="co-emp-search" placeholder="Search employees…" />
+      <div class="co-emp-list"></div>`;
+    // Prefer the manager area; otherwise append to main.
+    const anchor=[...document.querySelectorAll('h1,h2,h3,button,a')].find(x=>/employee|empleado/i.test(x.textContent||''));
+    (anchor?.closest('section,.card,.panel')?.parentElement||document.querySelector('main')||document.body).appendChild(section);
+    const modal=document.createElement('div');
+    modal.id='coEmpModal'; modal.className='co-emp-modal';
+    modal.innerHTML=`<div class="co-emp-sheet">
+      <div class="co-emp-sheet-head"><b>EMPLOYEE PROFILE</b><button class="co-close" onclick="document.getElementById('coEmpModal').classList.remove('open')">×</button></div>
+      <div id="coEmpModalBody"></div>
+    </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
+    document.getElementById('coEmployeeSearch').addEventListener('input',()=>E.render());
+  }
+
+  async function start(){
+    inject();
+    let tries=0;
+    const t=setInterval(async()=>{
+      tries++;
+      if(window.supabaseClient){
+        clearInterval(t);
+        try{await E.load()}catch(err){console.warn('Employee DB:',err)}
+      }else if(tries>30)clearInterval(t);
+    },500);
+  }
+  document.addEventListener('DOMContentLoaded',start);
+})();
+</script>
+
 </body></html>
