@@ -3,1573 +3,656 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<meta name="theme-color" content="#050b13">
+<meta name="theme-color" content="#0b0d12">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<link rel="manifest" href="manifest.json">
 <title>Cleaning Ops</title>
 <style>
-:root{--bg:#050a11;--navy:#091525;--navy2:#0d1c2e;--gold:#e7bf7a;--gold2:#f3d39b;--cream:#f4eee4;--muted:#9ba8b8;--line:#26384a;--card:rgba(10,25,42,.82);--danger:#d77b7b}
-*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html{background:var(--bg)}body{margin:0;background:radial-gradient(circle at 50% -10%,#13243a 0,#07111d 35%,#050a11 70%);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;min-height:100vh}.app{max-width:560px;margin:auto;min-height:100vh}.hero{padding:42px 22px 24px;background:linear-gradient(180deg,rgba(6,15,27,.96),rgba(7,18,31,.9));border-bottom:1px solid #1d3044}.brand{font-family:Georgia,"Times New Roman",serif;letter-spacing:.38em;font-size:24px;color:var(--gold2);font-weight:700}.eyebrow{margin-top:8px;font-size:10px;letter-spacing:.34em;color:#d7dce3}.heroRow{display:flex;justify-content:space-between;align-items:center}.role{margin-top:16px;font-size:11px;letter-spacing:.25em;color:var(--gold2);text-transform:uppercase}.main{padding:18px 15px 105px}.card{background:linear-gradient(145deg,rgba(13,31,50,.92),rgba(7,19,32,.9));border:1px solid var(--line);border-radius:22px;padding:18px;margin-bottom:14px;box-shadow:0 14px 35px rgba(0,0,0,.18)}h1,h2,h3{font-family:Georgia,"Times New Roman",serif;color:var(--cream);letter-spacing:.12em}h2{font-size:23px}h3{font-size:16px}.row{display:flex;justify-content:space-between;gap:12px;align-items:center}.muted{color:var(--muted);font-size:13px}.tiny{font-size:10px;letter-spacing:.2em;text-transform:uppercase}.place{font-family:Georgia,"Times New Roman",serif;font-size:28px;letter-spacing:.18em;color:var(--cream)}.time{margin-top:5px;color:var(--muted);letter-spacing:.16em;font-size:12px}.badge{border:1px solid rgba(231,191,122,.55);color:var(--gold2);border-radius:999px;padding:8px 11px;font-size:10px;font-weight:800;letter-spacing:.16em;text-transform:uppercase}.progress{height:8px;background:#17283a;border-radius:99px;overflow:hidden;margin:17px 0 8px}.bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));border-radius:99px;transition:.25s}.quick{display:grid;grid-template-columns:repeat(4,1fr);gap:9px;margin-bottom:14px}.quick button{min-height:92px;border:1px solid var(--line);background:rgba(10,25,42,.72);border-radius:18px;color:var(--cream);font-size:10px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;padding:10px 5px}.quick button .ico{display:block;font-size:25px;color:var(--gold2);margin-bottom:8px}.quick button:active,.quick button.active{background:linear-gradient(145deg,var(--gold2),var(--gold));color:#07111c;border-color:var(--gold2);transform:scale(.985)}.btn{width:100%;min-height:46px;border:1px solid rgba(231,191,122,.55);border-radius:14px;background:transparent;color:var(--gold2);font-weight:800;letter-spacing:.16em;text-transform:uppercase}.btn:active,.btn.gold{background:linear-gradient(145deg,var(--gold2),var(--gold));color:#07111c;border-color:var(--gold2)}.btn.secondary{border-color:var(--line);color:var(--cream)}.btn:disabled{opacity:.35}.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}.task{display:flex;align-items:center;gap:13px;padding:15px 0;border-bottom:1px solid var(--line);font-size:14px;letter-spacing:.14em;text-transform:uppercase}.task:last-child{border-bottom:0}.task input{appearance:none;width:23px;height:23px;border:2px solid #9da8b4;border-radius:8px;background:transparent;flex:0 0 auto}.task input:checked{background:var(--gold);border-color:var(--gold);box-shadow:inset 0 0 0 4px #0a1828}.task.done span{text-decoration:line-through;color:#7e8996}.photoGrid{display:grid;grid-template-columns:1fr 1fr;gap:10px}.photoBox{border:1px solid var(--line);border-radius:18px;padding:18px 10px;text-align:center;background:rgba(5,15,26,.5)}.photoIcon{font-size:28px;color:var(--gold2);margin-bottom:10px}.photoBox strong{display:block;font-size:10px;letter-spacing:.22em;text-transform:uppercase}.photoBox input{display:none}.photoBox label{display:inline-block;margin-top:13px;padding:9px 12px;border:1px solid rgba(231,191,122,.5);border-radius:999px;color:var(--gold2);font-size:9px;letter-spacing:.18em;text-transform:uppercase;font-weight:800}.thumb{width:100%;height:115px;object-fit:cover;border-radius:12px;margin-top:12px;display:none}.field{margin:12px 0}.field label{display:block;font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}.field input,.field select{width:100%;margin-top:7px;padding:13px;border:1px solid var(--line);border-radius:12px;background:#071321;color:var(--cream);font-size:16px;outline:none}.field input:focus,.field select:focus{border-color:var(--gold)}.employee{padding:13px;border:1px solid var(--line);border-radius:15px;margin-bottom:9px}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(560px,100%);display:flex;justify-content:space-around;background:rgba(5,12,20,.97);border-top:1px solid #203449;padding:8px 4px calc(8px + env(safe-area-inset-bottom));z-index:20;backdrop-filter:blur(12px)}.nav button{border:0;background:none;color:#8d9aaa;font-size:9px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;padding:7px 8px;min-width:74px}.nav button .navico{display:block;font-size:21px;letter-spacing:0;margin-bottom:4px}.nav button.active{color:var(--gold2)}.nav button:active{color:var(--gold);background:rgba(231,191,122,.1);border-radius:12px}.hidden{display:none!important}.divider{height:1px;background:var(--line);margin:15px 0}.toast{position:fixed;left:50%;bottom:92px;transform:translateX(-50%);background:var(--gold);color:#06111c;padding:11px 16px;border-radius:999px;font-size:11px;font-weight:900;letter-spacing:.1em;z-index:50;box-shadow:0 10px 30px #0008}.loginBox{text-align:center;padding-top:15vh}.loginBox .brand{font-size:28px}.loginBox p{color:var(--muted);font-size:13px}.stat{font-family:Georgia,"Times New Roman",serif;font-size:28px;color:var(--gold2)}
-@media(max-width:390px){.brand{font-size:20px}.quick button{min-height:82px;font-size:8px}.quick button .ico{font-size:22px}.place{font-size:24px}.photoGrid{grid-template-columns:1fr}}
-</style>
-
-<style id="co-polished-ui">
-/* CLEANING OPS — compact polished UI */
 :root{
-  --co-navy:#0b0f18;
-  --co-panel:#121824;
-  --co-panel2:#171e2b;
-  --co-gold:#d4ae4c;
-  --co-cream:#f5ead6;
-  --co-muted:#9ca3af;
+  --bg:#0a0c11;--panel:#11151d;--panel2:#171c25;--panel3:#1d232d;
+  --gold:#d8b45b;--gold2:#f0d99a;--cream:#f5eee2;--muted:#929aa8;
+  --red:#8e4148;--red2:#642d33;--line:rgba(255,255,255,.09);
+  --ok:#8fbe9a;--danger:#d98989
 }
-*{box-sizing:border-box}
-html,body{font-size:15px}
-body{overflow-x:hidden}
-button,input,select,textarea{font-family:inherit}
-button{transition:.15s ease}
-button:active{transform:scale(.98)}
-
-/* Make the overall app feel like a real mobile product */
-.container,.app-container,.page,.screen,.content,.main-content{
-  max-width:760px!important;
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{margin:0;background:var(--bg);color:var(--cream);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif}
+body{min-height:100vh;overflow-x:hidden}
+button,input,select,textarea{font:inherit}
+button{cursor:pointer}
+.app{max-width:680px;margin:auto;min-height:100vh}
+.topbar{
+ position:sticky;top:0;z-index:1000;height:60px;padding:8px 14px;
+ display:flex;align-items:center;justify-content:space-between;
+ background:rgba(10,12,17,.96);backdrop-filter:blur(16px);
+ border-bottom:1px solid rgba(216,180,91,.18)
 }
-main,.content,.page{padding-left:14px!important;padding-right:14px!important}
-h1{font-size:22px!important;line-height:1.15!important}
-h2{font-size:18px!important}
-h3{font-size:15px!important}
-p{font-size:13px!important;line-height:1.45!important}
-.card,.panel,.section,.restaurant-card{
-  border-radius:15px!important;
-  padding:13px!important;
-  margin-bottom:10px!important;
+.brand{font-family:Georgia,"Times New Roman",serif;font-size:15px;font-weight:700;letter-spacing:.19em}
+.topmeta{font-size:9px;color:var(--muted);letter-spacing:.1em;margin-top:3px;text-transform:uppercase}
+.menu{
+ width:42px!important;height:42px!important;min-height:42px!important;padding:8px!important;
+ background:transparent!important;border:0!important;display:flex!important;flex-direction:column!important;
+ justify-content:center!important;align-items:center!important;gap:5px!important
 }
-input,select,textarea{
-  min-height:42px!important;
-  border-radius:11px!important;
-  font-size:14px!important;
+.menu span{width:21px;height:2px;background:var(--cream);border-radius:2px;display:block}
+main{padding:16px 14px 92px}
+.hero{padding:8px 0 14px}
+.eyebrow{font-size:9px;letter-spacing:.2em;color:var(--gold);font-weight:800;text-transform:uppercase}
+.hero h1{margin:5px 0 0;font-family:Georgia,serif;font-size:25px;letter-spacing:-.01em}
+.card{
+ background:linear-gradient(145deg,var(--panel),#0e1219);
+ border:1px solid var(--line);border-radius:15px;padding:13px;margin-bottom:9px
 }
-button{
-  min-height:40px!important;
-  border-radius:11px!important;
-  font-size:13px!important;
+.card.red{border-color:rgba(142,65,72,.45)}
+.card.gold{border-color:rgba(216,180,91,.28)}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:7px}
+.statcard{background:var(--panel2);border:1px solid var(--line);border-radius:11px;padding:10px}
+.statlabel{font-size:8px;color:var(--muted);letter-spacing:.11em;text-transform:uppercase}
+.statvalue{font-size:20px;font-weight:800;margin-top:4px}
+h2{font-family:Georgia,serif;font-size:17px;letter-spacing:.06em;margin:0 0 7px}
+h3{font-size:11px;letter-spacing:.13em;margin:0 0 7px;color:var(--cream)}
+p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
+.tiny{font-size:8px;letter-spacing:.13em;color:var(--muted);text-transform:uppercase}
+.muted{color:var(--muted)}
+.badge{display:inline-flex;align-items:center;border:1px solid rgba(216,180,91,.35);border-radius:99px;padding:5px 8px;color:var(--gold2);font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.badge.ok{border-color:rgba(143,190,154,.35);color:var(--ok)}
+.badge.off{border-color:rgba(255,255,255,.12);color:var(--muted)}
+.btn{
+ width:100%;min-height:40px;padding:9px 11px;border-radius:10px;
+ border:1px solid rgba(216,180,91,.4);background:transparent;color:var(--gold2);
+ font-size:11px;font-weight:800;letter-spacing:.08em;text-transform:uppercase
 }
-
-/* Header */
-.co-topbar{
-  position:sticky;top:0;z-index:1000;
-  display:flex;align-items:center;justify-content:space-between;
-  min-height:56px;padding:8px 14px;
-  background:rgba(11,15,24,.96);
-  border-bottom:1px solid rgba(212,174,76,.20);
-  backdrop-filter:blur(14px);
+.btn.gold{background:linear-gradient(135deg,var(--gold2),var(--gold));color:#0b0d12;border-color:var(--gold)}
+.btn.secondary{border-color:var(--line);color:var(--cream);background:var(--panel2)}
+.btn.danger{border-color:rgba(217,137,137,.4);color:#efb2b2}
+.btn.small{min-height:32px;padding:6px 8px;font-size:9px;width:auto}
+.btn:disabled{opacity:.35;cursor:not-allowed}
+.field{margin:9px 0}
+.field label{display:block;font-size:8px;color:var(--muted);letter-spacing:.1em;text-transform:uppercase}
+.field input,.field select,.field textarea{
+ width:100%;margin-top:5px;padding:10px 11px;min-height:40px;
+ background:#0c1118;color:var(--cream);border:1px solid var(--line);border-radius:10px;outline:0;font-size:14px
 }
-.co-brand{display:flex;align-items:center;gap:9px;min-width:0}
-.co-brand-mark{
-  width:30px;height:30px;border-radius:9px;
-  display:grid;place-items:center;
-  border:1px solid rgba(212,174,76,.55);
-  color:var(--co-gold);font-weight:800;font-size:12px;
+.field input:focus,.field select:focus,.field textarea:focus{border-color:rgba(216,180,91,.55)}
+.list{display:grid;gap:7px}
+.listrow{
+ display:flex;align-items:center;gap:9px;padding:10px;border-radius:11px;
+ background:var(--panel2);border:1px solid var(--line)
 }
-.co-brand-text{font-size:12px;font-weight:800;letter-spacing:.16em;color:var(--co-cream);white-space:nowrap}
-.co-menu{
-  width:38px!important;height:38px!important;min-height:38px!important;
-  padding:7px!important;border:1px solid rgba(212,174,76,.35)!important;
-  background:#151b27!important;color:var(--co-cream)!important;
-  display:flex!important;flex-direction:column;justify-content:center;align-items:center;gap:4px;
-  border-radius:10px!important;
+.avatar{
+ width:34px;height:34px;border-radius:10px;background:#202631;border:1px solid rgba(216,180,91,.25);
+ display:grid;place-items:center;color:var(--gold2);font-size:10px;font-weight:800;flex:none
 }
-.co-menu span{display:block;width:17px;height:2px;background:currentColor;border-radius:2px}
-
-/* Compact navigation */
-nav,.bottom-nav,.tabbar{
-  gap:5px!important;
+.rowmain{flex:1;min-width:0}.rowtitle{font-size:11px;font-weight:750}.rowmeta{font-size:8px;color:var(--muted);margin-top:2px}
+.actions{display:flex;gap:6px}.actions .btn{flex:1}
+.progress{height:5px;border-radius:99px;background:#232a34;overflow:hidden;margin:10px 0 5px}
+.progress>div{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold2));width:0;transition:.2s}
+.task{display:flex;align-items:center;gap:9px;padding:10px 0;border-bottom:1px solid var(--line);font-size:11px}
+.task:last-child{border-bottom:0}
+.task input{width:18px;height:18px;accent-color:var(--gold);flex:none}
+.task.done span{text-decoration:line-through;color:#737b88}
+.sectionhead{display:flex;justify-content:space-between;align-items:end;gap:8px;margin:15px 0 7px}
+.sectionhead h2{margin:0;font-size:12px;letter-spacing:.12em}
+.link{border:0;background:none;color:var(--gold2);font-size:9px;padding:3px}
+.bottom{
+ position:fixed;bottom:0;left:50%;transform:translateX(-50%);z-index:900;
+ width:min(680px,100%);display:flex;justify-content:space-around;
+ background:rgba(10,12,17,.97);border-top:1px solid var(--line);
+ padding:6px 4px calc(6px + env(safe-area-inset-bottom));backdrop-filter:blur(14px)
 }
-nav button,.bottom-nav button,.tabbar button{
-  padding:8px 7px!important;
-  font-size:11px!important;
+.bottom button{border:0;background:none;color:#7f8794;min-height:48px;padding:5px 8px;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
+.bottom button.active{color:var(--gold2)}
+.bottom .navline{display:block;width:18px;height:2px;background:currentColor;margin:2px auto 6px;border-radius:2px}
+.drawer{
+ position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.62);display:none;justify-content:flex-end
 }
-
-/* Detailed checklist */
-#detailedChecklistWrap{margin-top:12px!important}
-.co-progress-card{padding:12px!important;border-radius:14px!important;margin-bottom:9px!important}
-.co-progress-top strong{font-size:10px!important}
-#detailedProgress{font-size:11px!important}
-.co-progress-track{height:5px!important;margin-top:8px!important}
-.co-detail-category{border-radius:13px!important;margin:7px 0!important}
-.co-cat-head{padding:11px!important;grid-template-columns:27px 1fr 18px!important;gap:7px!important}
-.co-cat-icon{font-size:17px!important}
-.co-cat-head b{font-size:11px!important;letter-spacing:.06em}
-.co-cat-head small{font-size:8px!important;margin-top:2px!important}
-.co-cat-body{padding:0 9px 9px!important}
-.co-detail-item{padding:9px 3px!important}
-.co-item-title{font-size:12px!important}
-.co-item-desc{font-size:8px!important}
-.co-detail-row{
-  gap:8px!important;margin-top:6px!important;padding:8px 9px!important;
-  border-radius:9px!important;font-size:12px!important;
+.drawer.open{display:flex}
+.sheet{
+ width:min(340px,90vw);height:100%;background:#10151d;border-left:1px solid rgba(216,180,91,.25);
+ padding:17px;overflow:auto
 }
-.co-detail-row input{width:17px!important;height:17px!important}
-
-/* Hide any oversized decorative elements from older versions */
-img.logo,.logo img{max-height:42px!important;width:auto!important}
+.sheethead{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.sheethead b{font-size:12px;letter-spacing:.12em}
+.close{width:34px!important;min-height:34px!important;padding:0!important}
+.notice{padding:10px 11px;border-radius:10px;background:#181e28;border:1px solid var(--line);font-size:10px;color:var(--muted)}
+.login{padding-top:12vh;text-align:center}
+.login .brand{font-size:25px}
+.loginbox{margin-top:22px;text-align:left}
+.modal{
+ position:fixed;inset:0;z-index:1900;background:rgba(0,0,0,.68);display:none;align-items:flex-end
+}
+.modal.open{display:flex}
+.modalbox{
+ width:100%;max-height:88vh;overflow:auto;background:#10151d;border-top:1px solid rgba(216,180,91,.24);
+ border-radius:18px 18px 0 0;padding:15px
+}
+.modalhead{display:flex;align-items:center;justify-content:space-between;margin-bottom:12px}
+.modalhead b{font-size:12px;letter-spacing:.1em}
+.tabs{display:flex;gap:6px;overflow:auto;margin-bottom:10px}
+.tabs button{white-space:nowrap;width:auto!important}
+.empty{text-align:center;padding:20px 10px;border:1px dashed rgba(255,255,255,.12);border-radius:11px;color:var(--muted);font-size:11px}
+.checkcat{border:1px solid var(--line);border-radius:11px;overflow:hidden;margin:7px 0;background:#10151d}
+.checkcathead{width:100%;border:0;background:transparent;color:var(--cream);padding:10px;text-align:left;display:flex;justify-content:space-between;align-items:center}
+.checkcatbody{display:none;padding:0 10px 9px}
+.checkcat.open .checkcatbody{display:block}
+.checkitem{padding:8px 0;border-top:1px solid var(--line)}
+.checkitem b{font-size:10px}.checkitem small{display:block;color:var(--muted);font-size:8px;margin-top:2px}
+.subtask{font-size:9px;color:#c8c1b7;padding:5px 0}
+.photo{width:100%;aspect-ratio:4/3;object-fit:cover;border-radius:9px;border:1px solid var(--line)}
+.photoGrid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.hidden{display:none!important}
+.toast{position:fixed;left:50%;bottom:82px;transform:translateX(-50%);z-index:3000;background:var(--gold);color:#0b0d12;padding:9px 13px;border-radius:99px;font-size:10px;font-weight:900;box-shadow:0 10px 30px #0008}
+@media(max-width:390px){
+ main{padding-left:11px;padding-right:11px}
+ .hero h1{font-size:22px}
+ .grid3{grid-template-columns:1fr 1fr}
+ .brand{font-size:13px}
+}
 </style>
-
-
-<style id="co-v8-manager">
-.v8-control{margin:8px 0 90px}
-.v8-toolbar{display:flex;gap:7px;margin:10px 0}
-.v8-toolbar input{flex:1;background:#111824!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;padding:10px!important}
-.v8-pill{font-size:9px;color:#d4ae4c;background:#151c29;border:1px solid rgba(212,174,76,.22);border-radius:99px;padding:6px 8px}
-.v8-admin-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.v8-admin-card{background:#111824;border:1px solid rgba(255,255,255,.08);border-radius:12px;padding:11px;text-align:left}
-.v8-admin-card b{display:block;font-size:12px}.v8-admin-card span{display:block;color:#8f98a8;font-size:8px;margin-top:3px}
-.v8-admin-section{margin-top:16px}.v8-admin-section h3{font-size:10px!important;letter-spacing:.13em;margin:0 0 7px!important}
-.v8-admin-row{display:flex;align-items:center;gap:9px;padding:10px;background:#101622;border:1px solid rgba(255,255,255,.07);border-radius:11px;margin:6px 0}
-.v8-admin-row-main{flex:1;min-width:0}.v8-admin-row-main b{font-size:11px;display:block}.v8-admin-row-main span{font-size:8px;color:#8f98a8;display:block;margin-top:2px}
-.v8-admin-row button{min-height:31px!important;padding:6px 8px!important;font-size:9px!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.08)!important}
-.v8-admin-row button.gold{color:#d4ae4c!important;border-color:rgba(212,174,76,.25)!important}
-.v8-editor{display:grid;gap:8px}.v8-editor label{font-size:9px;color:#8f98a8;letter-spacing:.06em}.v8-editor input,.v8-editor select,.v8-editor textarea{width:100%;margin-top:4px;background:#151c29!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important;border-radius:10px!important;padding:10px!important}
-.v8-actions{display:flex;gap:7px;margin-top:8px}.v8-actions button{flex:1}
-.v8-danger{background:#54272c!important;color:#f0c9cb!important;border:1px solid rgba(143,61,67,.5)!important}
-</style>
-
 </head>
-<body><div class="app">
-<header class="hero"><div class="heroRow"><div><div class="brand">CLEANING OPS</div><div class="eyebrow">RESTAURANT CLEANING MANAGEMENT</div></div><div style="color:var(--gold2);font-size:28px">◯</div></div><div class="role" id="heroSub">Manager • User</div></header>
-<main class="main"><section id="login"><div class="loginBox"><div class="brand">CLEANING OPS</div><p>Clean work. Clear standards.</p><div class="card" style="margin-top:25px;text-align:left"><div class="field"><label>Your name<input id="name" placeholder="Enter your name"></label></div><div class="grid2"><button class="btn" data-login="manager">Manager</button><button class="btn secondary" data-login="employee">Employee</button></div></div></div></section>
-<section id="app" class="hidden"><div id="dashboard"></div><div id="availability" class="hidden"></div><div id="photos" class="hidden"></div><div id="employees" class="hidden"></div><div id="settings" class="hidden"></div></section></main><nav id="nav" class="nav hidden"></nav></div>
+<body>
+<div class="app">
+<header class="topbar">
+  <div>
+    <div class="brand">CLEANING OPS</div>
+    <div class="topmeta" id="topMeta">Restaurant Cleaning Management</div>
+  </div>
+  <button class="menu" id="menuBtn" aria-label="Open menu" type="button"><span></span><span></span><span></span></button>
+</header>
+
+<main>
+  <section id="loginView" class="login"></section>
+  <section id="appView" class="hidden">
+    <div id="content"></div>
+  </section>
+</main>
+
+<nav id="bottomNav" class="bottom hidden"></nav>
+</div>
+
+<div id="drawer" class="drawer">
+  <div class="sheet">
+    <div class="sheethead"><b>MENU</b><button class="btn secondary close" id="closeDrawer">×</button></div>
+    <div class="card">
+      <div class="tiny">Account</div>
+      <div style="font-size:13px;font-weight:750;margin-top:5px" id="drawerName">—</div>
+      <div class="muted" style="font-size:9px;margin-top:3px" id="drawerEmail">—</div>
+      <div style="margin-top:8px" id="drawerRole"></div>
+    </div>
+    <div class="card">
+      <h3>LANGUAGE</h3>
+      <div class="grid2">
+        <button class="btn secondary" id="langEn">English</button>
+        <button class="btn secondary" id="langEs">Español</button>
+      </div>
+    </div>
+    <div class="card">
+      <h3>ACCOUNT</h3>
+      <button class="btn danger" id="logoutBtn">Sign Out</button>
+    </div>
+  </div>
+</div>
+
+<div id="modal" class="modal">
+  <div class="modalbox">
+    <div class="modalhead"><b id="modalTitle">DETAIL</b><button class="btn secondary close" id="modalClose">×</button></div>
+    <div id="modalBody"></div>
+  </div>
+</div>
 
 <script type="module">
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-const SUPABASE_URL = 'https://uwfoqbyejrfrgiwftvli.supabase.co';
-const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_fKXaIcoTfnQ8joXp3VM_YA_1u82btt1';
+const SUPABASE_URL='https://uwfoqbyejrfrgiwftvli.supabase.co';
+const SUPABASE_PUBLISHABLE_KEY='sb_publishable_fKXaIcoTfnQ8joXp3VM_YA_1u82btt1';
+const supabase=createClient(SUPABASE_URL,SUPABASE_PUBLISHABLE_KEY);
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+const $=id=>document.getElementById(id);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+const localDate=()=>{const d=new Date(),o=d.getTimezoneOffset();return new Date(d.getTime()-o*60000).toISOString().slice(0,10)};
+const fmtTime=t=>{if(!t)return '';const [h,m]=String(t).slice(0,5).split(':').map(Number);const d=new Date();d.setHours(h,m);return d.toLocaleTimeString([],{hour:'numeric',minute:'2-digit'})};
+const dayNames=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+const toast=m=>{const x=document.createElement('div');x.className='toast';x.textContent=m;document.body.appendChild(x);setTimeout(()=>x.remove(),2200)};
+const initials=n=>String(n||'Employee').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
 
-const DEFAULT_TASKS = [
-  'Grills / Parrillas','Fryers','Hoods','Floors',
-  'Equipment','Walls','Trash Area','Final Inspection'
-];
+let session=null, profile=null, restaurants=[], employees=[], tab='home';
+let assignment=null, tasks=[], timeEntry=null, photos=[];
+let lang=localStorage.getItem('cleaning_ops_lang')||'en';
 
-let session = null;
-let profile = null;
-let restaurants = [];
-let employees = [];
-let currentAssignment = null;
-let currentTasks = [];
-let currentPhotos = {before:null, after:null};
-let currentTimeEntry = null;
-let tab = 'dashboard';
-let working = false;
-
-const $ = id => document.getElementById(id);
-const escapeHtml = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
-const todayISO = () => new Date().toISOString().slice(0,10);
-const localDateISO = () => {
-  const d = new Date();
-  const off = d.getTimezoneOffset();
-  return new Date(d.getTime() - off*60000).toISOString().slice(0,10);
+const tr={
+ en:{home:'Overview',schedule:'Schedule',team:'Team',work:'Work',employee:'Employee',manager:'Manager',owner:'Owner',
+ signIn:'Sign In',signup:'Employee Sign Up',forgot:'Forgot Password',create:'Create Employee Account',
+ name:'Full Name',email:'Email',password:'Password',confirm:'Confirm Password',menu:'MENU',language:'LANGUAGE',
+ account:'ACCOUNT',signOut:'Sign Out',today:'Today',assignment:'Assignment',notAssigned:'Waiting for assignment',
+ clockIn:'Clock In',clockOut:'Clock Out',checklist:'Cleaning Checklist',photos:'Photos',history:'Work History',
+ employees:'Employees',restaurants:'Restaurants',assign:'Assign',manage:'Manage',active:'Active',inactive:'Inactive',
+ addRestaurant:'Add Restaurant',editRestaurant:'Edit Restaurant',save:'Save Changes',workDate:'Work date',
+ before:'Before Cleaning',after:'After Cleaning',upload:'Upload Photos',complete:'Complete Job',
+ noRestaurant:'NO RESTAURANT SCHEDULED',noEmployees:'No employees yet.',noAssignments:'No assignments.',
+ ownerControl:'Owner Control',managerControl:'Manager Control',promote:'Make Manager',demote:'Remove Manager',
+ activate:'Activate',deactivate:'Deactivate',view:'View',remove:'Remove',search:'Search employees…',
+ schedule:'Weekly Schedule',connected:'Cloud Connected',checkSetup:'Checklist Setup',bathrooms:'Bathrooms',
+ hours:'Hours',jobPhotos:'Job Photos',signatures:'Signatures',details:'Details',back:'Back'
+ },
+ es:{home:'Inicio',schedule:'Horario',team:'Equipo',work:'Trabajo',employee:'Empleado',manager:'Gerente',owner:'Propietario',
+ signIn:'Iniciar sesión',signup:'Registro de empleado',forgot:'Olvidé mi contraseña',create:'Crear cuenta de empleado',
+ name:'Nombre completo',email:'Correo electrónico',password:'Contraseña',confirm:'Confirmar contraseña',menu:'MENÚ',language:'IDIOMA',
+ account:'CUENTA',signOut:'Cerrar sesión',today:'Hoy',assignment:'Asignación',notAssigned:'Esperando asignación',
+ clockIn:'Marcar entrada',clockOut:'Marcar salida',checklist:'Lista de limpieza',photos:'Fotos',history:'Historial',
+ employees:'Empleados',restaurants:'Restaurantes',assign:'Asignar',manage:'Administrar',active:'Activo',inactive:'Inactivo',
+ addRestaurant:'Agregar restaurante',editRestaurant:'Editar restaurante',save:'Guardar cambios',workDate:'Fecha de trabajo',
+ before:'Antes de limpiar',after:'Después de limpiar',upload:'Subir fotos',complete:'Completar trabajo',
+ noRestaurant:'NO HAY RESTAURANTE PROGRAMADO',noEmployees:'No hay empleados todavía.',noAssignments:'No hay asignaciones.',
+ ownerControl:'Control del propietario',managerControl:'Control del gerente',promote:'Hacer gerente',demote:'Quitar gerente',
+ activate:'Activar',deactivate:'Desactivar',view:'Ver',remove:'Eliminar',search:'Buscar empleados…',
+ schedule:'Horario semanal',connected:'Conectado a la nube',checkSetup:'Configuración de lista',bathrooms:'Baños',
+ hours:'Horas',jobPhotos:'Fotos del trabajo',signatures:'Firmas',details:'Detalles',back:'Atrás'}
 };
-const dayName = d => new Intl.DateTimeFormat('en-US',{weekday:'long'}).format(d);
-const formatTime = t => {
-  if (!t) return '';
-  const [h,m] = String(t).slice(0,5).split(':').map(Number);
-  const x = new Date(); x.setHours(h,m,0,0);
-  return new Intl.DateTimeFormat('en-US',{hour:'numeric',minute:'2-digit'}).format(x);
-};
-const toast = t => {
-  const x=document.createElement('div'); x.className='toast'; x.textContent=t;
-  document.body.appendChild(x); setTimeout(()=>x.remove(),2200);
-};
-const isManager = () => profile?.role === 'manager';
+const T=k=>(tr[lang]&&tr[lang][k])||tr.en[k]||k;
 
-function loginScreen(message='') {
-  $('login').classList.remove('hidden');
-  $('app').classList.add('hidden');
-  $('nav').classList.add('hidden');
-  $('login').innerHTML = `
-    <div class="loginBox">
-      <div class="brand">CLEANING OPS</div>
-      <p>Restaurant Cleaning Management</p>
-      <div class="card" style="margin-top:25px;text-align:left">
-        ${message ? `<div class="employee" style="border-color:rgba(215,123,123,.5);margin-bottom:14px">${escapeHtml(message)}</div>` : ''}
-        <div class="field"><label>Email<input id="email" type="email" autocomplete="username" placeholder="name@email.com"></label></div>
-        <div class="field"><label>Password<input id="password" type="password" autocomplete="current-password" placeholder="••••••••"></label></div>
-        <button class="btn gold" id="loginBtn">Sign In</button>
-        <button class="btn secondary" id="signupBtn" style="margin-top:10px">Employee Sign Up</button>
-        <button class="btn secondary" id="resetBtn" style="margin-top:10px">${tr('forgot')}</button>
-        <button class="btn secondary" id="loginLangBtn" style="margin-top:10px">🌐 ${lang==='es'?'English':'Español'}</button>
-        <div class="muted" style="text-align:center;font-size:12px;margin-top:14px">
-          Employees create their own account. Your manager will assign your restaurant and schedule after signup.
-        </div>
-      </div>
-    </div>`;
-  $('loginBtn').onclick = signIn;
-  $('signupBtn').onclick = signupScreen;
-  $('resetBtn').onclick = resetPassword;
-  $('loginLangBtn').onclick = ()=>{
-    lang = lang==='en'?'es':'en';
-    localStorage.setItem('cleaning_ops_lang',lang);
-    loginScreen();
-  };
+const isManagement=()=>profile?.role==='owner'||profile?.role==='manager';
+const isOwner=()=>profile?.role==='owner';
+
+function roleLabel(){return profile?.role==='owner'?T('owner'):profile?.role==='manager'?T('manager'):T('employee')}
+
+function loginScreen(msg=''){
+ $('loginView').innerHTML=`
+ <div class="brand">CLEANING OPS</div>
+ <p>Restaurant Cleaning Management</p>
+ <div class="card loginbox">
+   ${msg?`<div class="notice" style="margin-bottom:10px">${esc(msg)}</div>`:''}
+   <div class="field"><label>${T('email')}<input id="email" type="email" autocomplete="username"></label></div>
+   <div class="field"><label>${T('password')}<input id="password" type="password" autocomplete="current-password"></label></div>
+   <button class="btn gold" id="loginBtn">${T('signIn')}</button>
+   <button class="btn secondary" id="signupBtn" style="margin-top:7px">${T('signup')}</button>
+   <button class="btn secondary" id="resetBtn" style="margin-top:7px">${T('forgot')}</button>
+ </div>`;
+ $('loginBtn').onclick=signIn;$('signupBtn').onclick=signupScreen;$('resetBtn').onclick=resetPassword;
+}
+function signupScreen(msg=''){
+ $('loginView').innerHTML=`
+ <div class="brand">CLEANING OPS</div>
+ <p>${T('signup')}</p>
+ <div class="card loginbox">
+  ${msg?`<div class="notice" style="margin-bottom:10px">${esc(msg)}</div>`:''}
+  <div class="field"><label>${T('name')}<input id="suName" autocomplete="name"></label></div>
+  <div class="field"><label>${T('email')}<input id="suEmail" type="email" autocomplete="email"></label></div>
+  <div class="field"><label>${T('password')}<input id="suPass" type="password" autocomplete="new-password"></label></div>
+  <div class="field"><label>${T('confirm')}<input id="suConfirm" type="password" autocomplete="new-password"></label></div>
+  <button class="btn gold" id="createBtn">${T('create')}</button>
+  <button class="btn secondary" id="backBtn" style="margin-top:7px">${T('back')}</button>
+ </div>`;
+ $('createBtn').onclick=signup;$('backBtn').onclick=()=>loginScreen();
+}
+async function signup(){
+ const name=$('suName')?.value.trim(),email=$('suEmail')?.value.trim(),pass=$('suPass')?.value,confirm=$('suConfirm')?.value;
+ if(!name||!email||!pass)return signupScreen('Please complete every field.');
+ if(pass.length<6)return signupScreen('Password must be at least 6 characters.');
+ if(pass!==confirm)return signupScreen('Passwords do not match.');
+ $('createBtn').disabled=true;
+ const {data,error}=await supabase.auth.signUp({email,password:pass,options:{data:{full_name:name}}});
+ if(error){$('createBtn').disabled=false;return signupScreen(error.message)}
+ if(data.session){session=data.session;await boot()}else loginScreen('Account created. Check your email to confirm, then sign in.');
+}
+async function signIn(){
+ const email=$('email')?.value.trim(),password=$('password')?.value;
+ if(!email||!password)return toast('Enter your email and password');
+ $('loginBtn').disabled=true;
+ const {data,error}=await supabase.auth.signInWithPassword({email,password});
+ if(error){$('loginBtn').disabled=false;return loginScreen(error.message)}
+ session=data.session;await boot();
+}
+async function resetPassword(){
+ const email=$('email')?.value.trim();if(!email)return toast('Enter your email first');
+ const {error}=await supabase.auth.resetPasswordForEmail(email,{redirectTo:location.origin+location.pathname});
+ toast(error?error.message:'Password reset email sent');
 }
 
-function signupScreen(message='') {
-  $('login').innerHTML = `
-    <div class="loginBox">
-      <div class="brand">CLEANING OPS</div>
-      <p>Create your employee account</p>
-      <div class="card" style="margin-top:25px;text-align:left">
-        ${message ? `<div class="employee" style="border-color:rgba(215,123,123,.5);margin-bottom:14px">${escapeHtml(message)}</div>` : ''}
-        <div class="field"><label>Full Name<input id="signupName" type="text" autocomplete="name" placeholder="Your full name"></label></div>
-        <div class="field"><label>Email<input id="signupEmail" type="email" autocomplete="email" placeholder="name@email.com"></label></div>
-        <div class="field"><label>Password<input id="signupPassword" type="password" autocomplete="new-password" placeholder="At least 6 characters"></label></div>
-        <div class="field"><label>Confirm Password<input id="signupConfirm" type="password" autocomplete="new-password" placeholder="Repeat password"></label></div>
-        <button class="btn gold" id="createAccountBtn">Create Employee Account</button>
-        <button class="btn secondary" id="backLoginBtn" style="margin-top:10px">${tr('backSignIn')}</button>
-        <button class="btn secondary" id="signupLangBtn" style="margin-top:10px">🌐 ${lang==='es'?'English':'Español'}</button>
-      </div>
-    </div>`;
-  $('createAccountBtn').onclick = signUp;
-  $('backLoginBtn').onclick = () => loginScreen();
-  $('signupLangBtn').onclick = ()=>{
-    lang = lang==='en'?'es':'en';
-    localStorage.setItem('cleaning_ops_lang',lang);
-    signupScreen();
-  };
+async function boot(){
+ const {data:{session:s}}=await supabase.auth.getSession();session=s;
+ if(!session)return loginScreen();
+ const {data:p,error}=await supabase.from('profiles').select('id,full_name,role,active,created_at').eq('id',session.user.id).single();
+ if(error||!p)return loginScreen('Your account profile is not set up yet.');
+ if(p.active===false){await supabase.auth.signOut();return loginScreen('This account is inactive.');}
+ profile=p;
+ await loadBase();
+ renderShell();
+ await showTab('home');
 }
 
-async function signUp() {
-  const name = $('signupName')?.value.trim();
-  const email = $('signupEmail')?.value.trim();
-  const password = $('signupPassword')?.value;
-  const confirm = $('signupConfirm')?.value;
-  if (!name || !email || !password) return signupScreen('Please complete every field.');
-  if (password.length < 6) return signupScreen('Password must be at least 6 characters.');
-  if (password !== confirm) return signupScreen('Passwords do not match.');
-
-  $('createAccountBtn').disabled = true;
-  const {data,error} = await supabase.auth.signUp({
-    email,
-    password,
-    options: { data: { full_name: name } }
-  });
-  $('createAccountBtn').disabled = false;
-
-  if (error) return signupScreen(error.message);
-
-  if (data.session) {
-    session = data.session;
-    await boot();
-  } else {
-    loginScreen('Account created! Check your email to confirm your account, then sign in.');
-  }
+async function loadBase(){
+ const r=await supabase.from('restaurants').select('id,name,weekday,start_time,active').order('weekday').order('name');
+ if(!r.error)restaurants=r.data||[];
+ if(isManagement()){
+  const e=await supabase.from('profiles').select('id,full_name,role,active,created_at').in('role',['employee','manager']).order('full_name');
+  if(!e.error)employees=e.data||[];
+ }
 }
 
-async function signIn() {
-  const email = $('email')?.value.trim();
-  const password = $('password')?.value;
-  if (!email || !password) return toast('Enter your email and password');
-  $('loginBtn').disabled = true;
-  const {data,error} = await supabase.auth.signInWithPassword({email,password});
-  $('loginBtn').disabled = false;
-  if (error) return loginScreen(error.message);
-  session = data.session;
-  await boot();
+function renderShell(){
+ $('loginView').classList.add('hidden');$('appView').classList.remove('hidden');$('bottomNav').classList.remove('hidden');
+ $('topMeta').textContent=`${roleLabel()} • ${profile.full_name||session.user.email}`;
+ $('drawerName').textContent=profile.full_name||'—';$('drawerEmail').textContent=session.user.email||'';
+ $('drawerRole').innerHTML=`<span class="badge ${profile.active===false?'off':''}">${esc(roleLabel())}</span>`;
+ $('bottomNav').innerHTML=`
+ <button data-tab="home"><span class="navline"></span>${T('home')}</button>
+ <button data-tab="schedule"><span class="navline"></span>${T('schedule')}</button>
+ ${isManagement()?`<button data-tab="team"><span class="navline"></span>${T('team')}</button>`:''}
+ <button data-tab="work"><span class="navline"></span>${T('work')}</button>`;
+ $('bottomNav').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
+}
+async function showTab(t){tab=t;$('bottomNav').querySelectorAll('button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));await render();}
+async function render(){
+ if(tab==='home')await renderHome();
+ if(tab==='schedule')await renderSchedule();
+ if(tab==='team')await renderTeam();
+ if(tab==='work')await renderWork();
 }
 
-async function resetPassword() {
-  const email = $('email')?.value.trim();
-  if (!email) return toast('Enter your email first');
-  const {error} = await supabase.auth.resetPasswordForEmail(email,{
-    redirectTo: window.location.origin + window.location.pathname
-  });
-  toast(error ? error.message : 'Password reset email sent');
+function todayRestaurant(){return restaurants.find(r=>r.weekday===new Date().getDay()&&r.active!==false)||null}
+
+async function loadToday(){
+ assignment=null;tasks=[];timeEntry=null;photos=[];
+ const r=todayRestaurant();if(!r)return;
+ let q=supabase.from('employee_assignments').select('*').eq('restaurant_id',r.id).eq('work_date',localDate());
+ if(!isManagement())q=q.eq('employee_id',session.user.id);
+ const {data:a,error}=await q.order('created_at',{ascending:true});
+ if(error)return;
+ assignment=isManagement()?(a||[])[0]:(a||[])[0];
+ if(!assignment)return;
+ const t=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
+ tasks=t.data||[];
+ if(!tasks.length){
+   const temp=await supabase.from('task_templates').select('name').eq('active',true).order('sort_order');
+   if(temp.data?.length){
+     await supabase.from('checklist_tasks').insert(temp.data.map(x=>({assignment_id:assignment.id,task_name:x.name,completed:false})));
+     const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
+     tasks=tt.data||[];
+   }
+ }
+ if(!isManagement()){
+   const te=await supabase.from('time_entries').select('id,clock_in,clock_out').eq('assignment_id',assignment.id).eq('employee_id',session.user.id).order('clock_in',{ascending:false}).limit(1);
+   timeEntry=te.data?.[0]||null;
+   const ph=await supabase.from('job_photos').select('id,photo_type,storage_path,created_at').eq('assignment_id',assignment.id).eq('employee_id',session.user.id).order('created_at',{ascending:false});
+   photos=ph.data||[];
+ }
 }
 
-async function boot() {
-  const {data:{session:s}} = await supabase.auth.getSession();
-  session = s;
-  if (!session) return loginScreen();
-
-  const {data:p,error:pe} = await supabase.from('profiles')
-    .select('id,full_name,role,active').eq('id',session.user.id).single();
-
-  if (pe || !p) return loginScreen('Your account profile is not set up yet.');
-  if (p.active === false) {
-    await supabase.auth.signOut();
-    return loginScreen('This account is inactive. Contact your manager.');
-  }
-  profile = p;
-  await loadBaseData();
-  renderShell();
-  await loadToday();
-  show('dashboard');
-}
-
-async function loadBaseData() {
-  const r = await supabase.from('restaurants')
-    .select('id,name,weekday,start_time,active')
-    .eq('active',true).order('weekday').order('name');
-  if (!r.error) restaurants = r.data || [];
-
-  if (isManager()) {
-    const e = await supabase.from('profiles')
-      .select('id,full_name,role,active')
-      .eq('role','employee').order('full_name');
-    if (!e.error) employees = e.data || [];
-  }
-}
-
-function renderShell() {
-  $('login').classList.add('hidden');
-  $('app').classList.remove('hidden');
-  $('nav').classList.remove('hidden');
-  $('heroSub').textContent = `${isManager()?'Manager':'Employee'} • ${profile.full_name || session.user.email}`;
-  // Make the v4 top-right circle a settings button.
-  const settingsCircle = document.querySelector('.hero .circle, header .circle, .topCircle');
-  if (settingsCircle) {
-    settingsCircle.textContent = '⚙';
-    settingsCircle.setAttribute('aria-label','Settings');
-    settingsCircle.style.cursor='pointer';
-    settingsCircle.onclick=()=>show('settings');
-  }
-  $('nav').innerHTML = isManager()
-    ? `<button data-tab="dashboard"><span class="navico">⌂</span>${tr('dashboard')}</button>
-       <button data-tab="availability"><span class="navico">◷</span>${tr('schedule')}</button>
-       <button data-tab="employees"><span class="navico">♙</span>${tr('employees')}</button>
-       <button data-tab="photos"><span class="navico">⌾</span>${tr('photos')}</button>`
-    : `<button data-tab="dashboard"><span class="navico">⌂</span>${lang==='es'?'Mi trabajo':'My Job'}</button>
-       <button data-tab="availability"><span class="navico">◷</span>${tr('schedule')}</button>
-       <button data-tab="photos"><span class="navico">⌾</span>${tr('photos')}</button>`;
-  document.querySelectorAll('#nav [data-tab]').forEach(b=>b.onclick=()=>show(b.dataset.tab));
-}
-
-function show(t) {
-  tab=t;
-  ['dashboard','availability','photos','employees','settings'].forEach(x=>{
-    const el=$(x);
-    if(el) el.classList.toggle('hidden',x!==t);
-  });
-  document.querySelectorAll('#nav button').forEach(b=>b.classList.toggle('active',b.dataset.tab===t));
-  render();
-}
-
-async function render() {
-  if (tab==='dashboard') await renderDash();
-  if (tab==='availability') await renderSchedule();
-  if (tab==='photos') await renderPhotos();
-  if (tab==='employees') await renderEmployees();
-  if (tab==='settings') await renderSettings();
-}
-
-function quick() {
-  return `<div class="quick">
-    <button data-tabq="dashboard"><span class="ico">☷</span>Checklist</button>
-    <button data-tabq="availability"><span class="ico">◷</span>Schedule</button>
-    ${isManager()?'<button data-tabq="employees"><span class="ico">♙</span>Employees</button>':''}
-    <button data-tabq="photos"><span class="ico">⌾</span>Photos</button>
-    <button data-tabq="settings"><span class="ico">⚙</span>${tr('settings')}</button>
-  </div>`;
-}
-
-function todayRestaurant() {
-  const dow = new Date().getDay(); // Sunday 0, Monday 1...
-  return restaurants.find(r=>r.weekday===dow) || null;
-}
-
-async function loadToday() {
-  const restaurant = todayRestaurant();
-  if (!restaurant) {
-    currentAssignment=null; currentTasks=[]; currentTimeEntry=null;
-    return;
-  }
-  const date = localDateISO();
-
-  let aq = supabase.from('employee_assignments')
-    .select('id,restaurant_id,employee_id,work_date,status')
-    .eq('restaurant_id',restaurant.id).eq('work_date',date);
-
-  if (!isManager()) aq = aq.eq('employee_id',session.user.id);
-
-  const {data:assignments,error} = await aq.order('created_at');
-  if (error) { toast(error.message); return; }
-
-  currentAssignment = isManager()
-    ? (assignments?.[0] || null)
-    : (assignments?.find(a=>a.employee_id===session.user.id) || null);
-
-  if (currentAssignment) {
-    const {data:tasks} = await supabase.from('checklist_tasks')
-      .select('id,task_name,completed,completed_at')
-      .eq('assignment_id',currentAssignment.id).order('created_at');
-    currentTasks = tasks || [];
-
-    if (!currentTasks.length) {
-      const {data:templates} = await supabase.from('task_templates')
-        .select('name').eq('active',true).order('sort_order');
-      const names=(templates||[]).map(x=>x.name);
-      if (names.length) {
-        const rows=names.map(name=>({assignment_id:currentAssignment.id,task_name:name,completed:false}));
-        await supabase.from('checklist_tasks').insert(rows);
-        const {data:created}=await supabase.from('checklist_tasks')
-          .select('id,task_name,completed,completed_at')
-          .eq('assignment_id',currentAssignment.id).order('created_at');
-        currentTasks=created||[];
-      }
-    }
-
-    const {data:te}=await supabase.from('time_entries')
-      .select('id,clock_in,clock_out')
-      .eq('assignment_id',currentAssignment.id)
-      .eq('employee_id',session.user.id)
-      .order('clock_in',{ascending:false}).limit(1);
-    currentTimeEntry=te?.[0]||null;
-
-    const {data:ph}=await supabase.from('job_photos')
-      .select('id,photo_type,storage_path,created_at')
-      .eq('assignment_id',currentAssignment.id)
-      .eq('employee_id',session.user.id)
-      .order('created_at',{ascending:false});
-    currentPhotos={before:ph?.find(x=>x.photo_type==='before')||null,
-                   after:ph?.find(x=>x.photo_type==='after')||null};
-  }
-}
-
-async function renderDash() {
-  await loadToday();
-  const s=todayRestaurant();
-  if (!s) {
-    $('dashboard').innerHTML=quick()+`<div class="card"><div class="tiny muted">Today</div><h2>NO RESTAURANT SCHEDULED</h2><p class="muted">There is no active restaurant scheduled for today.</p></div>`;
-    bindQuick(); return;
-  }
-
-  const done=currentTasks.filter(x=>x.completed).length;
-  const total=currentTasks.length || DEFAULT_TASKS.length;
-  const pct=total?Math.round(done/total*100):0;
-  const status=currentAssignment?.status || 'Not Assigned';
-
-  let assignedText='Not assigned';
-  if (currentAssignment) {
-    if (isManager()) {
-      const emp=employees.find(e=>e.id===currentAssignment.employee_id);
-      assignedText=emp?.full_name || 'Employee';
-    } else assignedText=profile.full_name || 'You';
-  }
-
-  const clockedIn=!!currentTimeEntry && !currentTimeEntry.clock_out;
-  $('dashboard').innerHTML=quick()+`
-    <div class="card">
-      <div class="row"><div><div class="tiny muted">Today</div><div class="place">${escapeHtml(s.name)}</div>
-      <div class="time">${dayName(new Date()).toUpperCase()} • ${formatTime(s.start_time)}</div></div>
-      <span class="badge">${pct===100&&currentAssignment?'Complete':status}</span></div>
-      <div class="progress"><div class="bar" style="width:${pct}%"></div></div>
-      <div class="row"><span class="muted">${done}/${total} TASKS COMPLETED</span><span class="stat">${pct}%</span></div>
-    </div>
-
-    <div class="card">
-      <div class="row"><h2 style="margin:0">TODAY’S ASSIGNMENT</h2><span class="muted">•••</span></div>
-      <div class="divider"></div>
-      <div class="row"><div><div class="tiny muted">Assigned employee</div>
-      <div style="font-size:18px;margin-top:5px">${escapeHtml(assignedText)}</div></div>
-      ${isManager()?'<button class="btn" id="assignBtn" style="width:auto;padding:0 14px;min-height:38px">Assign</button>':''}</div>
-      ${!isManager() && currentAssignment ? `<button class="btn ${clockedIn?'secondary':'gold'}" id="clockBtn" style="margin-top:15px">${clockedIn?'Clock Out':'Clock In'}</button>`:''}
-    </div>
-
-    ${currentAssignment?`<div class="card"><div class="row"><h2 style="margin:0">CLEANING CHECKLIST</h2><span class="stat">${done}/${total}</span></div>
-      ${currentTasks.map((x,i)=>`<label class="task ${x.completed?'done':''}">
-        <input type="checkbox" data-task="${x.id}" ${x.completed?'checked':''} ${isManager()?'disabled':''}>
-        <span>${escapeHtml(x.task_name)}</span><span style="margin-left:auto;color:var(--gold2)">›</span>
-      </label>`).join('')}
-      ${!isManager()?`<button class="btn ${pct===100?'gold':''}" id="complete" style="margin-top:16px" ${pct<100?'disabled':''}>Complete Job</button>`:''}
-    </div>`:
-    `<div class="card"><div class="tiny muted">Assignment</div><h2>WAITING FOR ASSIGNMENT</h2><p class="muted">${isManager()?'Assign an employee to this restaurant for today.':'Your manager has not assigned you to this restaurant yet.'}</p></div>`}`;
-
-  bindQuick();
-  document.querySelectorAll('[data-task]').forEach(c=>c.onchange=async e=>{
-    const id=e.target.dataset.task;
-    const completed=e.target.checked;
-    const {error}=await supabase.from('checklist_tasks').update({
-      completed, completed_at:completed?new Date().toISOString():null
-    }).eq('id',id);
-    if(error){toast(error.message);return}
-    await loadToday(); await renderDash(); toast(completed?'Task completed':'Task reopened');
-  });
-
-  const cb=$('clockBtn');
-  if(cb) cb.onclick=clockToggle;
-
-  const complete=$('complete');
-  if(complete) complete.onclick=completeJob;
-
-  const ab=$('assignBtn');
-  if(ab) ab.onclick=assignEmployee;
-}
-
-function bindQuick(){
-  document.querySelectorAll('[data-tabq]').forEach(b=>b.onclick=()=>show(b.dataset.tabq));
+async function renderHome(){
+ await loadToday();
+ const r=todayRestaurant();
+ if(!r){
+  $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('today')}</div><h1>${T('noRestaurant')}</h1></div>
+  <div class="card"><p>There is no active restaurant scheduled for today.</p></div>`;
+  return;
+ }
+ const done=tasks.filter(x=>x.completed).length,total=tasks.length,pct=total?Math.round(done/total*100):0;
+ const clocked=!!timeEntry&&!timeEntry.clock_out;
+ $('content').innerHTML=`
+ <div class="hero"><div class="eyebrow">${T('today')}</div><h1>${esc(r.name)}</h1><p>${dayNames[new Date().getDay()]} • ${fmtTime(r.start_time)}</p></div>
+ <div class="grid3">
+  <div class="statcard"><div class="statlabel">${T('checklist')}</div><div class="statvalue">${done}/${total}</div></div>
+  <div class="statcard"><div class="statlabel">${T('assignment')}</div><div class="statvalue">${assignment?'1':'0'}</div></div>
+  <div class="statcard"><div class="statlabel">${isManagement()?T('employees'):T('hours')}</div><div class="statvalue">${isManagement()?employees.length:(clocked?'ON':'—')}</div></div>
+ </div>
+ <div class="card ${assignment?'gold':''}" style="margin-top:9px">
+   <div class="row"><div><div class="tiny">${T('assignment')}</div><div style="font-size:15px;font-weight:750;margin-top:4px">${assignment?esc(isManagement()?(employees.find(e=>e.id===assignment.employee_id)?.full_name||'Employee'):(r.name)):T('notAssigned')}</div></div>
+   ${assignment?`<span class="badge">${esc(assignment.status||'assigned')}</span>`:''}</div>
+   ${!isManagement()&&assignment?`<button class="btn ${clocked?'secondary':'gold'}" id="clockBtn" style="margin-top:11px">${clocked?T('clockOut'):T('clockIn')}</button>`:''}
+   ${isManagement()?`<button class="btn secondary" id="openTeam" style="margin-top:11px">${T('manage')}</button>`:''}
+ </div>
+ ${assignment?`<div class="card">
+  <div class="row"><h2>${T('checklist')}</h2><span class="badge">${pct}%</span></div>
+  <div class="progress"><div style="width:${pct}%"></div></div>
+  ${tasks.map(x=>`<label class="task ${x.completed?'done':''}"><input type="checkbox" data-task="${x.id}" ${x.completed?'checked':''} ${isManagement()?'disabled':''}><span>${esc(x.task_name)}</span></label>`).join('')}
+  ${!isManagement()?`<button class="btn ${pct===100?'gold':''}" id="completeBtn" style="margin-top:10px" ${pct<100?'disabled':''}>${T('complete')}</button>`:''}
+ </div>`:`<div class="card"><div class="tiny">${T('assignment')}</div><h2>${T('notAssigned')}</h2><p>${isManagement()?'Assign an employee from Team.':'Your manager has not assigned you to today’s restaurant yet.'}</p></div>`}`;
+ if($('clockBtn'))$('clockBtn').onclick=clockToggle;
+ if($('completeBtn'))$('completeBtn').onclick=completeJob;
+ if($('openTeam'))$('openTeam').onclick=()=>showTab('team');
+ document.querySelectorAll('[data-task]').forEach(c=>c.onchange=async e=>{
+   const {error}=await supabase.from('checklist_tasks').update({completed:e.target.checked,completed_at:e.target.checked?new Date().toISOString():null}).eq('id',e.target.dataset.task);
+   if(error)return toast(error.message);await renderHome();
+ });
 }
 
 async function clockToggle(){
-  if(!currentAssignment) return toast('No assignment yet');
-  if(currentTimeEntry && !currentTimeEntry.clock_out){
-    const {error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString()}).eq('id',currentTimeEntry.id);
-    if(error)return toast(error.message);
-    toast('Clocked out ✓');
-  } else {
-    const {error}=await supabase.from('time_entries').insert({
-      assignment_id:currentAssignment.id, employee_id:session.user.id, clock_in:new Date().toISOString()
-    });
-    if(error)return toast(error.message);
-    toast('Clocked in ✓');
-  }
-  await renderDash();
+ if(!assignment)return;
+ if(timeEntry&&!timeEntry.clock_out){
+   const {error}=await supabase.from('time_entries').update({clock_out:new Date().toISOString()}).eq('id',timeEntry.id);
+   if(error)return toast(error.message);toast('Clocked out');
+ }else{
+   const {error}=await supabase.from('time_entries').insert({assignment_id:assignment.id,employee_id:session.user.id,clock_in:new Date().toISOString()});
+   if(error)return toast(error.message);toast('Clocked in');
+ }
+ await renderHome();
 }
-
 async function completeJob(){
-  if(!currentAssignment) return;
-  if(currentTasks.some(x=>!x.completed)) return toast('Finish every task first');
-  const {error}=await supabase.from('employee_assignments').update({status:'completed'}).eq('id',currentAssignment.id);
-  if(error)return toast(error.message);
-  await supabase.from('notifications').insert({
-    type:'job_completed',
-    title:'Job completed',
-    body:`${profile.full_name||'Employee'} completed ${todayRestaurant()?.name||'the restaurant'}.`,
-    related_id:currentAssignment.id
-  });
-  toast('Job completed ✓');
-  await renderDash();
-}
-
-async function assignEmployee(){
-  if(!employees.length) return toast('Add an employee first');
-  const choices=employees.map((e,i)=>`${i+1}. ${e.full_name||e.id}`).join('\n');
-  const n=prompt(`Choose employee number:\n${choices}`);
-  const idx=Number(n)-1;
-  if(!Number.isInteger(idx)||!employees[idx]) return;
-  const r=todayRestaurant(); if(!r)return;
-  const {data:existing}=await supabase.from('employee_assignments')
-    .select('id').eq('restaurant_id',r.id).eq('work_date',localDateISO()).eq('employee_id',employees[idx].id).maybeSingle();
-  if(existing) return toast('Employee already assigned');
-  const {data,error}=await supabase.from('employee_assignments').insert({
-    restaurant_id:r.id, employee_id:employees[idx].id, work_date:localDateISO(), status:'assigned'
-  }).select().single();
-  if(error)return toast(error.message);
-  currentAssignment=data;
-  toast(`${employees[idx].full_name} assigned ✓`);
-  await renderDash();
-}
-
-
-const translations = {
-  en: {
-    settings:'SETTINGS', preferences:'Preferences', language:'Language',
-    english:'English', spanish:'Español', account:'Account', signedInAs:'Signed in as',
-    signOut:'Sign Out', save:'Save', back:'Back', languageSaved:'Language saved ✓',
-    dashboard:'Dashboard', schedule:'Schedule', employees:'Employees', photos:'Photos',
-    checklist:'Checklist', noRestaurant:'NO RESTAURANT SCHEDULED',
-    noRestaurantText:'There is no active restaurant scheduled for today.',
-    todayAssignment:"TODAY’S ASSIGNMENT", assignedEmployee:'Assigned employee',
-    assign:'Assign', cleaningChecklist:'CLEANING CHECKLIST', completeJob:'Complete Job',
-    waiting:'WAITING FOR ASSIGNMENT',
-    waitingManager:'Assign an employee to this restaurant for today.',
-    waitingEmployee:'Your manager has not assigned you to this restaurant yet.',
-    jobDocs:'Job documentation', before:'Before Cleaning', after:'After Cleaning',
-    takePhoto:'Take Photo', replace:'Replace', pending:'Pending', submitted:'Submitted ✓',
-    uploadPhotos:'Upload Photos', noJob:'No job is assigned to you today.',
-    teamManagement:'Team management', employeeAccounts:'EMPLOYEES',
-    selfSignup:'Employees can create their own accounts from the Sign In screen. Once an employee account is created, it appears here automatically.',
-    noEmployees:'No employees yet.', managerTools:'Manager tools', assignments:'ASSIGNMENTS',
-    assignmentText:'Use the Dashboard to assign employees to today’s restaurant. Multiple employees can be assigned to the same restaurant.',
-    weekly:'Weekly schedule', restaurantSchedule:'RESTAURANT SCHEDULE',
-    connected:'CONNECTED', connectedText:'Changes made in Supabase are now shared across devices. Employee assignments and job progress are stored in the cloud.',
-    restaurantScheduleText:"Your team's weekly restaurant schedule.",
-    employee:'Employee', manager:'Manager', signIn:'Sign In', employeeSignup:'Employee Sign Up',
-    forgot:'Forgot Password', createAccount:'Create Employee Account', backSignIn:'Back to Sign In',
-    fullName:'Full Name', email:'Email', password:'Password', confirmPassword:'Confirm Password',
-    signupText:'Create your employee account', restaurantCleaning:'Restaurant Cleaning Management',
-    accountCreated:'Account created! Check your email to confirm your account, then sign in.'
-  },
-  es: {
-    settings:'CONFIGURACIÓN', preferences:'Preferencias', language:'Idioma',
-    english:'English', spanish:'Español', account:'Cuenta', signedInAs:'Sesión iniciada como',
-    signOut:'Cerrar sesión', save:'Guardar', back:'Atrás', languageSaved:'Idioma guardado ✓',
-    dashboard:'Inicio', schedule:'Horario', employees:'Empleados', photos:'Fotos',
-    checklist:'Lista', noRestaurant:'NO HAY RESTAURANTE PROGRAMADO',
-    noRestaurantText:'No hay un restaurante activo programado para hoy.',
-    todayAssignment:'ASIGNACIÓN DE HOY', assignedEmployee:'Empleado asignado',
-    assign:'Asignar', cleaningChecklist:'LISTA DE LIMPIEZA', completeJob:'Completar trabajo',
-    waiting:'ESPERANDO ASIGNACIÓN',
-    waitingManager:'Asigna un empleado a este restaurante para hoy.',
-    waitingEmployee:'Tu gerente todavía no te ha asignado a este restaurante.',
-    jobDocs:'Documentación del trabajo', before:'Antes de limpiar', after:'Después de limpiar',
-    takePhoto:'Tomar foto', replace:'Reemplazar', pending:'Pendiente', submitted:'Enviada ✓',
-    uploadPhotos:'Subir fotos', noJob:'No tienes un trabajo asignado para hoy.',
-    teamManagement:'Gestión del equipo', employeeAccounts:'EMPLEADOS',
-    selfSignup:'Los empleados pueden crear su propia cuenta desde la pantalla de inicio de sesión. Cuando se cree, aparecerá aquí automáticamente.',
-    noEmployees:'No hay empleados todavía.', managerTools:'Herramientas del gerente', assignments:'ASIGNACIONES',
-    assignmentText:'Usa Inicio para asignar empleados al restaurante de hoy. Puedes asignar varios empleados al mismo restaurante.',
-    weekly:'Horario semanal', restaurantSchedule:'HORARIO DE RESTAURANTES',
-    connected:'CONECTADO', connectedText:'Los cambios de Supabase se comparten entre dispositivos. Las asignaciones y el progreso se guardan en la nube.',
-    restaurantScheduleText:'Horario semanal de los restaurantes.',
-    employee:'Empleado', manager:'Gerente', signIn:'Iniciar sesión', employeeSignup:'Registro de empleado',
-    forgot:'Olvidé mi contraseña', createAccount:'Crear cuenta de empleado', backSignIn:'Volver a iniciar sesión',
-    fullName:'Nombre completo', email:'Correo electrónico', password:'Contraseña', confirmPassword:'Confirmar contraseña',
-    signupText:'Crea tu cuenta de empleado', restaurantCleaning:'Gestión de limpieza de restaurantes',
-    accountCreated:'¡Cuenta creada! Revisa tu correo para confirmar la cuenta y luego inicia sesión.'
-  }
-};
-let lang = localStorage.getItem('cleaning_ops_lang') || 'en';
-const tr = k => (translations[lang] && translations[lang][k]) || translations.en[k] || k;
-
-
-
-async function renderSettings(){
-  const box = $('settings');
-  if (!box) return;
-  box.innerHTML = `
-    <div class="card" style="border:1px solid rgba(238,205,153,.30);margin-bottom:16px">
-      <div class="row">
-        <div>
-          <div class="tiny muted">CLEANING OPS</div>
-          <h2 style="margin:5px 0 0">${tr('settings')}</h2>
-        </div>
-        <button id="settingsBack" class="btn secondary" style="width:auto;min-height:40px;padding:0 14px">${tr('back')}</button>
-      </div>
-    </div>
-
-    <div class="card">
-      <div class="tiny muted">${tr('preferences')}</div>
-      <h2>${tr('language')}</h2>
-      <p class="muted">Choose the language you want to use in the app.</p>
-      <select id="languageSelect" style="width:100%;padding:14px;border-radius:12px;background:#081525;color:#f4eee4;border:1px solid rgba(238,205,153,.35);font-size:16px">
-        <option value="en" ${lang==='en'?'selected':''}>🇺🇸 English</option>
-        <option value="es" ${lang==='es'?'selected':''}>🇪🇸 Español</option>
-      </select>
-    </div>
-
-    <div class="card">
-      <div class="tiny muted">${tr('account')}</div>
-      <h2>${tr('signedInAs')}</h2>
-      <div class="employee">
-        <strong>${escapeHtml(profile?.full_name || '—')}</strong>
-        <div class="muted" style="margin-top:5px">${escapeHtml(session?.user?.email || '')}</div>
-        <div class="badge" style="display:inline-block;margin-top:10px">${isManager()?tr('manager'):tr('employee')}</div>
-      </div>
-      <button id="logoutBtn" class="btn" style="width:100%;margin-top:16px;background:transparent;border:1px solid rgba(210,100,100,.7);color:#f0b1b1;font-weight:700">
-        🚪 ${tr('signOut')}
-      </button>
-    </div>
-  `;
-
-  $('settingsBack').onclick = ()=>show('dashboard');
-
-  $('languageSelect').onchange = async e => {
-    lang=e.target.value;
-    localStorage.setItem('cleaning_ops_lang',lang);
-    toast(tr('languageSaved'));
-    renderShell();
-    await render();
-  };
-
-  $('logoutBtn').onclick = async ()=>{
-    $('logoutBtn').disabled=true;
-    await supabase.auth.signOut();
-  };
+ if(tasks.some(x=>!x.completed))return toast('Finish every task first');
+ const {error}=await supabase.from('employee_assignments').update({status:'completed'}).eq('id',assignment.id);
+ if(error)return toast(error.message);
+ await supabase.from('notifications').insert({type:'job_completed',title:'Job completed',body:`${profile.full_name||'Employee'} completed ${todayRestaurant()?.name||'the restaurant'}.`,related_id:assignment.id});
+ toast('Job completed');await renderHome();
 }
 
 async function renderSchedule(){
-  const rows=restaurants.map(r=>`<div class="task"><span>${escapeHtml(r.name)}</span><span style="margin-left:auto;color:var(--gold2)">${['Sun','Mon','Tue','Wed','Thu','Fri','Sat'][r.weekday]} • ${formatTime(r.start_time)}</span></div>`).join('');
-  $('availability').innerHTML=`<div class="card"><div class="tiny muted">Weekly schedule</div><h2>RESTAURANT SCHEDULE</h2><p class="muted">${isManager()?'Your current restaurant schedule. Restaurant editing will be added to the manager tools.':'Your team’s weekly restaurant schedule.'}</p>${rows||'<div class="muted">No restaurants found.</div>'}</div>
-  ${isManager()?`<div class="card"><div class="tiny muted">Live system</div><h2>CONNECTED</h2><p class="muted">Changes made in Supabase are now shared across devices. Employee assignments and job progress are stored in the cloud.</p></div>`:''}`;
+ const rows=restaurants.map(r=>`<div class="listrow"><div class="avatar">${String(r.name||'R').slice(0,2).toUpperCase()}</div><div class="rowmain"><div class="rowtitle">${esc(r.name)}</div><div class="rowmeta">${dayNames[r.weekday]||''} • ${fmtTime(r.start_time)}</div></div>${isManagement()?`<button class="btn small" data-edit-r="${r.id}">${T('manage')}</button>`:''}</div>`).join('');
+ $('content').innerHTML=`
+ <div class="hero"><div class="eyebrow">${T('schedule')}</div><h1>${T('schedule')}</h1></div>
+ <div class="card">${isManagement()?`<button class="btn gold" id="addRestaurant">${T('addRestaurant')}</button>`:''}
+ <div class="list" style="margin-top:9px">${rows||`<div class="empty">No restaurants found.</div>`}</div></div>`;
+ if($('addRestaurant'))$('addRestaurant').onclick=()=>restaurantModal();
+ document.querySelectorAll('[data-edit-r]').forEach(b=>b.onclick=()=>restaurantModal(b.dataset.editR));
 }
 
-async function renderPhotos(){
-  await loadToday();
-  const canUpload=!isManager() && !!currentAssignment;
-  $('photos').innerHTML=`<div class="card"><div class="tiny muted">Job documentation</div><h2>BEFORE & AFTER</h2>
-    <p class="muted">Upload the before photo when you arrive and the after photo when the restaurant is complete.</p>
-    <div class="photoGrid">
-      <div class="photoBox"><div class="photoIcon">⌾</div><strong>Before Cleaning</strong>
-      <label for="before">${currentPhotos.before?'Replace':'Take Photo'}</label><input id="before" type="file" accept="image/*" capture="environment">
-      <div id="beforeStatus" class="muted" style="margin-top:10px">${currentPhotos.before?'Submitted ✓':'Pending'}</div></div>
-      <div class="photoBox"><div class="photoIcon">⌾</div><strong>After Cleaning</strong>
-      <label for="after">${currentPhotos.after?'Replace':'Take Photo'}</label><input id="after" type="file" accept="image/*" capture="environment">
-      <div id="afterStatus" class="muted" style="margin-top:10px">${currentPhotos.after?'Submitted ✓':'Pending'}</div></div>
-    </div>
-    ${canUpload?'<button id="uploadPhotos" class="btn gold" style="margin-top:15px">Upload Photos</button>':''}
-    ${!currentAssignment?'<p class="muted" style="margin-top:15px">No job is assigned to you today.</p>':''}
-    ${isManager()?'<p class="muted" style="margin-top:15px">Manager photo review will display cloud-uploaded job photos here once employees submit them.</p>':''}
-  </div>`;
+async function restaurantModal(id=null){
+ const r=id?restaurants.find(x=>x.id===id):null;
+ openModal(id?T('editRestaurant'):T('addRestaurant'),`
+ <div class="field"><label>Name<input id="rName" value="${esc(r?.name||'')}"></label></div>
+ <div class="grid2">
+  <div class="field"><label>Weekday<select id="rDay">${dayNames.map((d,i)=>`<option value="${i}" ${(r?.weekday??1)===i?'selected':''}>${d}</option>`).join('')}</select></label></div>
+  <div class="field"><label>Start Time<input id="rTime" type="time" value="${esc((r?.start_time||'').slice(0,5))}"></label></div>
+ </div>
+ <button class="btn gold" id="saveRestaurant">${T('save')}</button>
+ ${r?`<button class="btn danger" id="toggleRestaurant" style="margin-top:7px">${r.active===false?T('activate'):T('deactivate')}</button>`:''}
+ `);
+ $('saveRestaurant').onclick=async()=>{
+  const name=$('rName').value.trim(),weekday=Number($('rDay').value),start_time=$('rTime').value;
+  if(!name||!start_time)return toast('Name and time are required');
+  const payload={name,weekday,start_time,active:true};
+  const q=id?supabase.from('restaurants').update(payload).eq('id',id):supabase.from('restaurants').insert(payload);
+  const {error}=await q;if(error)return toast(error.message);
+  closeModal();await loadBase();await renderSchedule();toast('Saved');
+ };
+ if($('toggleRestaurant'))$('toggleRestaurant').onclick=async()=>{
+  const {error}=await supabase.from('restaurants').update({active:r.active===false}).eq('id',id);
+  if(error)return toast(error.message);closeModal();await loadBase();await renderSchedule();
+ };
+}
 
-  const before=$('before'), after=$('after');
-  if(before) before.onchange=()=>{if(before.files[0])$('beforeStatus').textContent=before.files[0].name};
-  if(after) after.onchange=()=>{if(after.files[0])$('afterStatus').textContent=after.files[0].name};
-  const up=$('uploadPhotos'); if(up) up.onclick=uploadPhotos;
+async function renderTeam(){
+ if(!isManagement()){return showTab('home')}
+ await loadBase();
+ const as=await supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false});
+ const assignments=as.data||[];
+ $('content').innerHTML=`
+ <div class="hero"><div class="eyebrow">${isOwner()?T('ownerControl'):T('managerControl')}</div><h1>${T('team')}</h1></div>
+ <div class="grid3">
+  <div class="statcard"><div class="statlabel">${T('employees')}</div><div class="statvalue">${employees.filter(e=>e.role==='employee').length}</div></div>
+  <div class="statcard"><div class="statlabel">${T('restaurants')}</div><div class="statvalue">${restaurants.length}</div></div>
+  <div class="statcard"><div class="statlabel">${T('assign')}</div><div class="statvalue">${assignments.length}</div></div>
+ </div>
+ <div class="card" style="margin-top:9px">
+  <div class="field"><label>${T('search')}<input id="teamSearch" placeholder="${T('search')}"></label></div>
+  <div class="list" id="teamList"></div>
+ </div>
+ <div class="sectionhead"><h2>${T('restaurants')}</h2><button class="link" id="teamRestaurants">Manage</button></div>
+ <div class="card"><p>${T('connected')}</p><button class="btn secondary" id="checklistManage">${T('checkSetup')}</button></div>`;
+ const renderList=()=>{
+  const q=($('teamSearch')?.value||'').toLowerCase();
+  const list=employees.filter(e=>(e.full_name||'').toLowerCase().includes(q));
+  $('teamList').innerHTML=list.length?list.map(e=>{
+   const ea=assignments.filter(a=>a.employee_id===e.id);
+   const role=e.role;
+   return `<div class="listrow">
+    <div class="avatar">${initials(e.full_name)}</div><div class="rowmain">
+     <div class="rowtitle">${esc(e.full_name||'Employee')}</div>
+     <div class="rowmeta">${role==='manager'?T('manager'):T('employee')} • ${ea.length} assignment${ea.length===1?'':'s'}</div>
+    </div>
+    <span class="badge ${e.active===false?'off':'ok'}">${e.active===false?T('inactive'):T('active')}</span>
+    <button class="btn small" data-manage-e="${e.id}">${T('manage')}</button>
+   </div>`;
+  }).join(''):`<div class="empty">${T('noEmployees')}</div>`;
+  document.querySelectorAll('[data-manage-e]').forEach(b=>b.onclick=()=>employeeModal(b.dataset.manageE,assignments));
+ };
+ $('teamSearch').oninput=renderList;renderList();
+ $('teamRestaurants').onclick=()=>showTab('schedule');
+ $('checklistManage').onclick=()=>checklistManager();
+}
+
+async function employeeModal(id,allAssignments){
+ const e=employees.find(x=>x.id===id);if(!e)return;
+ const ea=allAssignments.filter(a=>a.employee_id===id);
+ openModal(T('manage'),`
+  <div class="row"><div><div style="font-size:15px;font-weight:750">${esc(e.full_name||'Employee')}</div><div class="rowmeta">${esc(e.role)}</div></div><span class="badge ${e.active===false?'off':'ok'}">${e.active===false?T('inactive'):T('active')}</span></div>
+  <div class="sectionhead"><h2>${T('assignment')}</h2></div>
+  <div class="list" id="empAssignments">${ea.length?ea.map(a=>`<div class="listrow"><div class="rowmain"><div class="rowtitle">${esc(restaurants.find(r=>r.id===a.restaurant_id)?.name||'Restaurant')}</div><div class="rowmeta">${esc(a.work_date||'')}</div></div><button class="btn small danger" data-remove-a="${a.id}">${T('remove')}</button></div>`).join(''):`<div class="empty">${T('noAssignments')}</div>`}</div>
+  <div class="grid2" style="margin-top:8px">
+   <button class="btn gold" id="assignEmployee">${T('assign')}</button>
+   <button class="btn secondary" id="historyEmployee">${T('history')}</button>
+  </div>
+  <button class="btn secondary" id="toggleEmployee" style="margin-top:7px">${e.active===false?T('activate'):T('deactivate')}</button>
+  ${isOwner()&&e.role==='employee'?`<button class="btn secondary" id="promoteEmployee" style="margin-top:7px">${T('promote')}</button>`:''}
+  ${isOwner()&&e.role==='manager'?`<button class="btn danger" id="demoteEmployee" style="margin-top:7px">${T('demote')}</button>`:''}
+ `);
+ document.querySelectorAll('[data-remove-a]').forEach(b=>b.onclick=async()=>{
+  const {error}=await supabase.from('employee_assignments').delete().eq('id',b.dataset.removeA);
+  if(error)return toast(error.message);closeModal();await renderTeam();
+ });
+ $('assignEmployee').onclick=()=>assignmentModal(e.id);
+ $('historyEmployee').onclick=()=>employeeHistory(e.id);
+ $('toggleEmployee').onclick=async()=>{
+  const {error}=await supabase.from('profiles').update({active:e.active===false}).eq('id',e.id);
+  if(error)return toast(error.message);closeModal();await loadBase();await renderTeam();
+ };
+ if($('promoteEmployee'))$('promoteEmployee').onclick=async()=>{
+  const {error}=await supabase.from('profiles').update({role:'manager'}).eq('id',e.id);
+  if(error)return toast(error.message);toast('Employee promoted to Manager');closeModal();await loadBase();await renderTeam();
+ };
+ if($('demoteEmployee'))$('demoteEmployee').onclick=async()=>{
+  const {error}=await supabase.from('profiles').update({role:'employee'}).eq('id',e.id);
+  if(error)return toast(error.message);toast('Manager changed to Employee');closeModal();await loadBase();await renderTeam();
+ };
+}
+
+async function assignmentModal(empId){
+ openModal(T('assign'),`
+  <div class="field"><label>${T('restaurants')}<select id="aRestaurant">${restaurants.filter(r=>r.active!==false).map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select></label></div>
+  <div class="field"><label>${T('workDate')}<input id="aDate" type="date" value="${localDate()}"></label></div>
+  <button class="btn gold" id="saveAssignment">${T('assign')}</button>`);
+ $('saveAssignment').onclick=async()=>{
+  const restaurant_id=$('aRestaurant').value,work_date=$('aDate').value;
+  if(!restaurant_id||!work_date)return;
+  const exists=await supabase.from('employee_assignments').select('id').eq('employee_id',empId).eq('restaurant_id',restaurant_id).eq('work_date',work_date).maybeSingle();
+  if(exists.data)return toast('Already assigned');
+  const {error}=await supabase.from('employee_assignments').insert({employee_id:empId,restaurant_id,work_date,status:'assigned'});
+  if(error)return toast(error.message);toast('Assignment saved');closeModal();await renderTeam();
+ };
+}
+
+async function employeeHistory(id){
+ const [t,p,s]=await Promise.all([
+  supabase.from('time_entries').select('*').eq('employee_id',id).order('clock_in',{ascending:false}).limit(30),
+  supabase.from('job_photos').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30),
+  supabase.from('completion_signatures').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30)
+ ]);
+ openModal(T('history'),`
+ <div class="grid3">
+  <div class="statcard"><div class="statlabel">${T('hours')}</div><div class="statvalue">${(t.data||[]).length}</div></div>
+  <div class="statcard"><div class="statlabel">${T('jobPhotos')}</div><div class="statvalue">${(p.data||[]).length}</div></div>
+  <div class="statcard"><div class="statlabel">${T('signatures')}</div><div class="statvalue">${(s.data||[]).length}</div></div>
+ </div>
+ <div class="sectionhead"><h2>${T('hours')}</h2></div>
+ <div class="list">${(t.data||[]).slice(0,12).map(x=>`<div class="listrow"><div class="rowmain"><div class="rowtitle">${new Date(x.clock_in).toLocaleDateString()}</div><div class="rowmeta">${new Date(x.clock_in).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})} → ${x.clock_out?new Date(x.clock_out).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'}):'Open'}</div></div></div>`).join('')||`<div class="empty">No time entries.</div>`}</div>
+ `);
+}
+
+async function renderWork(){
+ if(!isManagement()){
+  await loadToday();
+  $('content').innerHTML=`
+   <div class="hero"><div class="eyebrow">${T('work')}</div><h1>${T('photos')}</h1></div>
+   <div class="card"><p>${assignment?'Upload the required before and after photos for today’s assignment.':'No job is assigned to you today.'}</p>
+   ${assignment?`<div class="photoGrid">
+    <div><div class="tiny">${T('before')}</div><input id="beforeFile" type="file" accept="image/*" capture="environment" style="margin-top:7px;width:100%"></div>
+    <div><div class="tiny">${T('after')}</div><input id="afterFile" type="file" accept="image/*" capture="environment" style="margin-top:7px;width:100%"></div>
+   </div><button class="btn gold" id="uploadBtn" style="margin-top:10px">${T('upload')}</button>`:''}</div>`;
+  if($('uploadBtn'))$('uploadBtn').onclick=uploadPhotos;
+  return;
+ }
+ const ph=await supabase.from('job_photos').select('id,employee_id,assignment_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(40);
+ const list=ph.data||[];
+ const cards=await Promise.all(list.map(async p=>{
+  const emp=employees.find(e=>e.id===p.employee_id)?.full_name||'Employee';
+  const signed=await supabase.storage.from('job-photos').createSignedUrl(p.storage_path,3600);
+  return `<div class="listrow"><div class="rowmain"><div class="rowtitle">${esc(emp)} • ${esc(p.photo_type)}</div><div class="rowmeta">${new Date(p.created_at).toLocaleString()}</div>${signed.data?.signedUrl?`<img class="photo" style="margin-top:7px" src="${esc(signed.data.signedUrl)}" alt="">`:''}</div></div>`;
+ }));
+ $('content').innerHTML=`<div class="hero"><div class="eyebrow">${T('work')}</div><h1>${T('jobPhotos')}</h1></div><div class="card"><div class="list">${cards.join('')||`<div class="empty">No job photos yet.</div>`}</div></div>`;
 }
 
 async function uploadPhotos(){
-  const before=$('before')?.files?.[0], after=$('after')?.files?.[0];
-  if(!currentAssignment)return toast('No assignment');
-  if(!before && !after)return toast('Choose a photo first');
-  for (const [type,file] of [['before',before],['after',after]]) {
-    if(!file) continue;
-    const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
-    const path=`${session.user.id}/${currentAssignment.id}/${type}-${Date.now()}.${ext}`;
-    const {error:ue}=await supabase.storage.from('job-photos').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
-    if(ue)return toast(`Photo upload failed: ${ue.message}`);
-    const {error:ie}=await supabase.from('job_photos').insert({
-      assignment_id:currentAssignment.id, employee_id:session.user.id, photo_type:type, storage_path:path
-    });
-    if(ie)return toast(`Photo record failed: ${ie.message}`);
-    await supabase.from('notifications').insert({
-      type:'photo_uploaded', title:`${type==='before'?'Before':'After'} photo uploaded`,
-      body:`${profile.full_name||'Employee'} uploaded a ${type} photo.`,
-      related_id:currentAssignment.id
-    });
-  }
-  toast('Photo(s) uploaded ✓');
-  await renderPhotos();
-}
-
-async function renderEmployees(){
-  if(!isManager()) return;
-  await loadBaseData();
-  $('employees').innerHTML=`<div class="card"><div class="tiny muted">Team management</div><h2>EMPLOYEES</h2>
-    <p class="muted">Employees can create their own accounts from the Sign In screen. Once an employee account is created, it appears here automatically.</p>
-    <div class="divider"></div>
-    ${employees.length?employees.map(e=>`<div class="employee"><div class="row"><div><strong>${escapeHtml(e.full_name||'Unnamed employee')}</strong>
-      <div class="muted" style="margin-top:4px">${e.active===false?'Inactive':'Active'} • ${escapeHtml(e.id.slice(0,8))}…</div></div>
-      <span class="badge">${e.active===false?'Inactive':'Active'}</span></div></div>`).join(''):
-      '<div class="muted" style="text-align:center;padding:12px">No employees yet.</div>'}
-  </div>
-  <div class="card"><div class="tiny muted">Manager tools</div><h2>ASSIGNMENTS</h2><p class="muted">Use the Dashboard to assign employees to today’s restaurant. Multiple employees can be assigned to the same restaurant.</p></div>`;
-}
-
-supabase.auth.onAuthStateChange(async (_event, s)=>{
-  session=s;
-  if(!s){ profile=null; loginScreen(); }
-});
-
-boot();
-
-document.getElementById('settingsTopBtn')?.addEventListener('click', ()=>{
-  if (session && profile) show('settings');
-  else loginScreen();
-});
-
-document.addEventListener('click', (e)=>{
-  const el=e.target.closest('.circle, .topCircle, .heroCircle, .settingsCircle');
-  if(el && !el.closest('#nav')) show('settings');
-});
-</script>
-
-
-<script>
-/* Cleaning Ops — Detailed Checklist Engine v5
-   Connects the employee checklist to:
-   checklist_categories -> checklist_items -> checklist_subtasks
-   restaurant_checklist_items -> restaurant_bathrooms -> cleaning_rotations
-*/
-(function () {
-  const CO = window.CleaningOpsDetailed = {
-    loaded: false,
-    categories: [],
-    items: [],
-    subtasks: [],
-    restaurantItems: [],
-    bathrooms: [],
-    rotations: [],
-    completed: new Set(),
-    async load() {
-      if (!window.supabase || !window.supabaseClient) return false;
-      try {
-        const sb = window.supabaseClient;
-        const [c,i,s,ri,b,r] = await Promise.all([
-          sb.from('checklist_categories').select('*').eq('active', true).order('sort_order'),
-          sb.from('checklist_items').select('*').eq('active', true).order('sort_order'),
-          sb.from('checklist_subtasks').select('*').eq('active', true).order('sort_order'),
-          sb.from('restaurant_checklist_items').select('*').eq('active', true),
-          sb.from('restaurant_bathrooms').select('*').eq('active', true),
-          sb.from('cleaning_rotations').select('*').eq('active', true)
-        ]);
-        const err = [c,i,s,ri,b,r].find(x => x.error);
-        if (err) throw err.error;
-        this.categories = c.data || [];
-        this.items = i.data || [];
-        this.subtasks = s.data || [];
-        this.restaurantItems = ri.data || [];
-        this.bathrooms = b.data || [];
-        this.rotations = r.data || [];
-        this.loaded = true;
-        return true;
-      } catch (e) {
-        console.warn('Detailed checklist load:', e);
-        return false;
-      }
-    },
-    restaurantId() {
-      const r = window.currentRestaurant || window.selectedRestaurant || window.todayRestaurant;
-      return r && (r.id || r.restaurant_id);
-    },
-    build(restaurantId) {
-      const rid = restaurantId || this.restaurantId();
-      let items = this.items.filter(x =>
-        !this.restaurantItems.length ||
-        this.restaurantItems.some(ri => ri.restaurant_id === rid && ri.item_id === x.id)
-      );
-      if (!items.length) items = this.items.slice();
-
-      const byCat = {};
-      this.categories.forEach(c => byCat[c.id] = {
-        id:c.id, name:c.name, icon:c.icon || '🧽', sort:c.sort_order || 0, items:[]
-      });
-      items.forEach(item => {
-        const c = byCat[item.category_id];
-        if (!c) return;
-        c.items.push({
-          ...item,
-          subtasks: this.subtasks.filter(s => s.item_id === item.id)
-        });
-      });
-      let cats = Object.values(byCat).filter(c => c.items.length).sort((a,b)=>a.sort-b.sort);
-
-      // Bathrooms are always included when configured, regardless of rotation.
-      const bath = this.bathrooms.filter(b => !rid || b.restaurant_id === rid);
-      if (bath.length) {
-        const c = {
-          id:'__bathrooms__', name:'BAÑOS / BATHROOMS', icon:'🚻', sort:99999, mandatory:true, items:[]
-        };
-        bath.forEach((b, bi) => {
-          const toilets = Number(b.toilet_count || 0);
-          const urinals = Number(b.urinal_count || 0);
-          const sinks = Number(b.sink_count || 1);
-          const base = [
-            'Toilets', 'Urinals', 'Sinks', 'Faucets', 'Mirrors',
-            'Soap Dispensers', 'Paper Towel Dispensers', 'Hand Dryers',
-            'Bathroom Floors', 'Walls', 'Doors', 'Door Handles',
-            'Trash Cans', 'Baseboards', 'Vents', 'High-Touch Areas', 'Supplies Check'
-          ];
-          const subs = [];
-          for(let n=1;n<=Math.max(1,toilets);n++) subs.push({id:`bath-${b.id}-toilet-${n}`, name:`Toilet #${n}`, required:true});
-          for(let n=1;n<=urinals;n++) subs.push({id:`bath-${b.id}-urinal-${n}`, name:`Urinal #${n}`, required:true});
-          for(let n=1;n<=sinks;n++) subs.push({id:`bath-${b.id}-sink-${n}`, name:`Sink #${n}`, required:true});
-          base.slice(3).forEach(x => subs.push({id:`bath-${b.id}-${x}`, name:x, required:true}));
-          c.items.push({
-            id:`bath-${b.id}`, name:b.name || `Bathroom #${bi+1}`,
-            description:'MANDATORY EVERY SERVICE DAY', required:true, subtasks:subs
-          });
-        });
-        cats.push(c);
-      }
-      return cats;
-    },
-    key(id){ return `co-detail-${id}`; },
-    restore(){
-      try {
-        document.querySelectorAll('[data-co-check]').forEach(el => {
-          if(localStorage.getItem(this.key(el.dataset.coCheck)) === '1') {
-            el.checked = true;
-            el.closest('.co-detail-row')?.classList.add('done');
-          }
-        });
-      } catch(e){}
-    },
-    render(restaurantId) {
-      const host = document.querySelector('#detailedChecklistHost');
-      if (!host) return;
-      const cats = this.build(restaurantId);
-      if (!cats.length) {
-        host.innerHTML = '<div class="co-empty">No detailed checklist is configured for this restaurant yet.</div>';
-        return;
-      }
-      host.innerHTML = cats.map(cat => `
-        <section class="co-detail-category">
-          <button class="co-cat-head" type="button" onclick="this.parentElement.classList.toggle('open')">
-            <span class="co-cat-icon">${cat.icon}</span>
-            <span><b>${escCO(cat.name)}</b>${cat.mandatory?'<small>MANDATORY EVERY SERVICE DAY</small>':''}</span>
-            <span class="co-chevron">⌄</span>
-          </button>
-          <div class="co-cat-body">
-            ${cat.items.map(item => `
-              <div class="co-detail-item">
-                <div class="co-item-title">${escCO(item.name)}</div>
-                ${item.description ? `<div class="co-item-desc">${escCO(item.description)}</div>` : ''}
-                ${(item.subtasks||[]).map(st => `
-                  <label class="co-detail-row">
-                    <input type="checkbox" data-co-check="${escCO(String(st.id))}" onchange="CleaningOpsDetailed.toggle(this)">
-                    <span>${escCO(st.name)}</span>
-                  </label>
-                `).join('')}
-              </div>
-            `).join('')}
-          </div>
-        </section>
-      `).join('');
-      this.restore();
-      this.updateProgress();
-    },
-    toggle(el){
-      const id=el.dataset.coCheck;
-      try { localStorage.setItem(this.key(id), el.checked?'1':'0'); } catch(e){}
-      el.closest('.co-detail-row')?.classList.toggle('done', el.checked);
-      this.updateProgress();
-    },
-    updateProgress(){
-      const boxes=[...document.querySelectorAll('#detailedChecklistHost [data-co-check]')];
-      const done=boxes.filter(x=>x.checked).length;
-      const total=boxes.length;
-      const p=document.querySelector('#detailedProgress');
-      if(p) p.textContent = total ? `${done} / ${total} completed` : '';
-      const bar=document.querySelector('#detailedProgressBar');
-      if(bar) bar.style.width = total ? `${Math.round(done/total*100)}%` : '0%';
-    }
-  };
-  function escCO(s){return String(s).replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]));}
-  window.escCO=escCO;
-
-  // Expose a simple hook that the existing app can call after loading Supabase.
-  window.initDetailedChecklist = async function(restaurantId){
-    const ok=await CO.load();
-    if(ok) CO.render(restaurantId);
-    return ok;
-  };
-})();
-</script>
-
-<style>
-#detailedChecklistWrap{margin-top:18px}
-.co-progress-card{background:linear-gradient(135deg,#101522,#171d2b);border:1px solid rgba(212,174,76,.35);border-radius:18px;padding:16px;margin-bottom:14px}
-.co-progress-top{display:flex;justify-content:space-between;gap:12px;align-items:center;color:#f5ead2}
-.co-progress-top strong{letter-spacing:.08em;text-transform:uppercase;font-size:12px}
-#detailedProgress{font-size:12px;opacity:.8}
-.co-progress-track{height:7px;background:#282d38;border-radius:99px;overflow:hidden;margin-top:11px}
-#detailedProgressBar{height:100%;width:0;background:#d4ae4c;transition:width .25s ease}
-.co-detail-category{border:1px solid rgba(255,255,255,.09);border-radius:18px;overflow:hidden;margin:10px 0;background:#10141e}
-.co-cat-head{width:100%;border:0;background:transparent;color:#f4ead7;padding:15px;display:grid;grid-template-columns:34px 1fr 20px;gap:10px;text-align:left;align-items:center;font:inherit;cursor:pointer}
-.co-cat-icon{font-size:21px}
-.co-cat-head b{display:block;letter-spacing:.07em;font-size:13px}
-.co-cat-head small{display:block;margin-top:4px;color:#d4ae4c;font-size:9px;letter-spacing:.12em}
-.co-chevron{transition:transform .2s}
-.co-detail-category.open .co-chevron{transform:rotate(180deg)}
-.co-cat-body{display:none;padding:0 12px 12px}
-.co-detail-category.open .co-cat-body{display:block}
-.co-detail-item{padding:12px 4px;border-top:1px solid rgba(255,255,255,.07)}
-.co-item-title{font-weight:700;color:#fff;font-size:14px}
-.co-item-desc{color:#d4ae4c;font-size:9px;letter-spacing:.08em;margin-top:3px}
-.co-detail-row{display:flex;align-items:center;gap:10px;margin-top:9px;padding:10px 11px;border-radius:12px;background:#191e29;color:#eee;cursor:pointer}
-.co-detail-row.done{opacity:.65;text-decoration:line-through}
-.co-detail-row input{width:19px;height:19px;accent-color:#d4ae4c}
-.co-empty{padding:22px;border:1px dashed rgba(212,174,76,.35);border-radius:16px;color:#cfc7b6;text-align:center}
-</style>
-
-<script>
-document.addEventListener('DOMContentLoaded', () => {
-  // Add the detailed checklist below the first existing checklist container.
-  const existing = document.querySelector('#checklist, .checklist, [data-section="checklist"]');
-  if (!document.querySelector('#detailedChecklistWrap')) {
-    const wrap=document.createElement('div');
-    wrap.id='detailedChecklistWrap';
-    wrap.innerHTML=`
-      <div class="co-progress-card">
-        <div class="co-progress-top"><strong>Detailed Cleaning Checklist</strong><span id="detailedProgress"></span></div>
-        <div class="co-progress-track"><div id="detailedProgressBar"></div></div>
-      </div>
-      <div id="detailedChecklistHost"></div>`;
-    (existing?.parentElement || document.body).appendChild(wrap);
-  }
-  // Try immediately; if the existing app creates Supabase client later,
-  // a short retry catches it without changing the rest of the application.
-  let tries=0;
-  const timer=setInterval(async()=>{
-    tries++;
-    if(window.supabaseClient){
-      clearInterval(timer);
-      const rid=window.currentRestaurant?.id || window.selectedRestaurant?.id || window.todayRestaurant?.id || null;
-      await window.initDetailedChecklist(rid);
-    } else if(tries>30) clearInterval(timer);
-  },500);
-});
-</script>
-
-
-<script id="co-polished-header">
-document.addEventListener('DOMContentLoaded',()=>{
-  if(document.querySelector('.co-topbar')) return;
-  const bar=document.createElement('div');
-  bar.className='co-topbar';
-  bar.innerHTML=`
-    <div class="co-brand">
-      <div class="co-brand-mark">CO</div>
-      <div class="co-brand-text">CLEANING OPS</div>
-    </div>
-    <button class="co-menu" id="coMenuBtn" aria-label="Open settings" title="Settings">
-      <span></span><span></span><span></span>
-    </button>`;
-  document.body.prepend(bar);
-
-  document.getElementById('coMenuBtn').addEventListener('click',()=>{
-    // First try existing Settings buttons/sections by text.
-    const els=[...document.querySelectorAll('button,a,[role="button"]')];
-    const target=els.find(el=>{
-      const t=(el.textContent||'').trim().toLowerCase();
-      return t==='settings'||t==='ajustes'||t.includes('settings')||t.includes('ajustes');
-    });
-    if(target && target.id!=='coMenuBtn'){ target.click(); return; }
-
-    // Otherwise expose a small app-level settings drawer with language/logout.
-    let drawer=document.getElementById('coSettingsDrawer');
-    if(!drawer){
-      drawer=document.createElement('div');
-      drawer.id='coSettingsDrawer';
-      drawer.style.cssText='position:fixed;inset:0;z-index:2000;background:rgba(0,0,0,.58);display:flex;justify-content:flex-end;';
-      drawer.innerHTML=`
-        <div style="width:min(330px,88vw);height:100%;background:#101622;border-left:1px solid rgba(212,174,76,.28);padding:18px;color:#f5ead6">
-          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:22px">
-            <b style="letter-spacing:.12em;font-size:13px">SETTINGS</b>
-            <button id="coCloseSettings" style="width:34px!important;min-height:34px!important;background:#171e2b;color:#f5ead6;border:1px solid rgba(255,255,255,.12)">×</button>
-          </div>
-          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">Language</div>
-          <button onclick="localStorage.setItem('co-lang','en');location.reload()" style="width:100%;margin-bottom:7px;background:#171e2b;color:#f5ead6;border:1px solid rgba(255,255,255,.1)">English</button>
-          <button onclick="localStorage.setItem('co-lang','es');location.reload()" style="width:100%;margin-bottom:18px;background:#171e2b;color:#f5ead6;border:1px solid rgba(255,255,255,.1)">Español</button>
-          <div style="font-size:12px;color:#9ca3af;margin-bottom:8px">Account</div>
-          <button id="coDrawerLogout" style="width:100%;background:#171e2b;color:#f5ead6;border:1px solid rgba(255,255,255,.1)">Log out</button>
-        </div>`;
-      document.body.appendChild(drawer);
-      document.getElementById('coCloseSettings').onclick=()=>drawer.remove();
-      drawer.addEventListener('click',e=>{if(e.target===drawer)drawer.remove()});
-      document.getElementById('coDrawerLogout').onclick=async()=>{
-        if(window.supabaseClient?.auth) await window.supabaseClient.auth.signOut();
-        location.reload();
-      };
-    }
-  });
-});
-</script>
-
-
-<style id="co-employee-db">
-.co-emp-db{margin:14px 0 90px}
-.co-emp-head{display:flex;justify-content:space-between;align-items:end;gap:10px;margin-bottom:10px}
-.co-emp-head h2{margin:0!important;font-size:17px!important;letter-spacing:.05em}
-.co-emp-head p{margin:3px 0 0!important;color:#9ca3af;font-size:11px!important}
-.co-emp-search{width:100%;background:#111824;border:1px solid rgba(255,255,255,.1);color:#f5ead6;padding:11px 12px;border-radius:11px;margin-bottom:9px}
-.co-emp-list{display:grid;gap:8px}
-.co-emp-card{background:#111824;border:1px solid rgba(255,255,255,.09);border-radius:14px;padding:12px}
-.co-emp-top{display:flex;align-items:center;gap:10px}
-.co-avatar{width:36px;height:36px;border-radius:11px;background:#1b2331;border:1px solid rgba(212,174,76,.35);display:grid;place-items:center;color:#d4ae4c;font-weight:800;font-size:12px;flex:none}
-.co-emp-name{font-weight:700;color:#f5ead6;font-size:13px}
-.co-emp-meta{font-size:10px;color:#8f98a8;margin-top:2px}
-.co-status{margin-left:auto;font-size:9px;letter-spacing:.08em;text-transform:uppercase;padding:5px 7px;border-radius:99px;background:rgba(82,160,104,.12);color:#9fd0a9}
-.co-status.off{background:rgba(255,255,255,.07);color:#8f98a8}
-.co-emp-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:10px}
-.co-stat{background:#171e2b;border-radius:9px;padding:8px;text-align:center}
-.co-stat b{display:block;color:#f5ead6;font-size:12px}
-.co-stat span{display:block;color:#8f98a8;font-size:8px;margin-top:2px}
-.co-emp-actions{display:flex;gap:6px;margin-top:9px}
-.co-emp-actions button{flex:1;min-height:34px!important;font-size:10px!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.09)!important}
-.co-emp-actions button.primary{color:#d4ae4c!important;border-color:rgba(212,174,76,.3)!important}
-.co-emp-empty{text-align:center;padding:25px 12px;color:#8f98a8;border:1px dashed rgba(255,255,255,.12);border-radius:13px;font-size:12px}
-.co-emp-modal{position:fixed;inset:0;z-index:2500;background:rgba(0,0,0,.68);display:none;align-items:flex-end}
-.co-emp-modal.open{display:flex}
-.co-emp-sheet{width:100%;max-height:86vh;overflow:auto;background:#101622;border-top:1px solid rgba(212,174,76,.25);border-radius:20px 20px 0 0;padding:16px}
-.co-emp-sheet-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px}
-.co-emp-sheet-head b{font-size:13px;letter-spacing:.1em;color:#f5ead6}
-.co-close{width:34px!important;min-height:34px!important;padding:0!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.1)!important}
-.co-detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:7px}
-.co-detail-box{background:#171e2b;border-radius:10px;padding:10px}
-.co-detail-box span{display:block;color:#8f98a8;font-size:8px;text-transform:uppercase;letter-spacing:.08em}
-.co-detail-box b{display:block;color:#f5ead6;font-size:12px;margin-top:3px}
-.co-assign-row{display:flex;gap:7px;margin-top:10px}
-.co-assign-row select{flex:1!important;background:#171e2b!important;color:#f5ead6!important;border:1px solid rgba(255,255,255,.1)!important}
-.co-assign-row button{min-width:78px!important;background:#d4ae4c!important;color:#0b0f18!important;border:0!important}
-.co-assignment{display:flex;justify-content:space-between;align-items:center;padding:8px 10px;background:#171e2b;border-radius:9px;margin-top:6px;font-size:11px;color:#f5ead6}
-.co-assignment button{min-height:28px!important;width:28px!important;padding:0!important;background:transparent!important;color:#b7aeb0!important;border:0!important}
-</style>
-
-<script id="co-employee-db-js">
-(function(){
-  const E = {
-    employees:[], assignments:[], restaurants:[],
-    async load(){
-      if(!window.supabaseClient) return;
-      const sb=window.supabaseClient;
-      const [p,a,r]=await Promise.all([
-        sb.from('profiles').select('*').order('full_name'),
-        sb.from('employee_assignments').select('*'),
-        sb.from('restaurants').select('*').order('name')
-      ]);
-      if(p.error) throw p.error;
-      this.employees=(p.data||[]).filter(x=>x.role==='employee');
-      this.assignments=a.data||[];
-      this.restaurants=r.data||[];
-      this.render();
-    },
-    initials(n){
-      return String(n||'Employee').split(/\s+/).filter(Boolean).slice(0,2).map(x=>x[0]).join('').toUpperCase();
-    },
-    esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))},
-    assignmentsFor(id){return this.assignments.filter(a=>a.employee_id===id)},
-    restaurantName(id){return this.restaurants.find(r=>r.id===id)?.name||'Unassigned'},
-    render(){
-      let host=document.getElementById('coEmployeeDB');
-      if(!host) return;
-      const q=(document.getElementById('coEmployeeSearch')?.value||'').toLowerCase().trim();
-      const list=this.employees.filter(e=>(e.full_name||'').toLowerCase().includes(q));
-      host.querySelector('.co-emp-list').innerHTML=list.length?list.map(e=>{
-        const as=this.assignmentsFor(e.id);
-        const active=e.active!==false;
-        return `<article class="co-emp-card">
-          <div class="co-emp-top">
-            <div class="co-avatar">${this.initials(e.full_name)}</div>
-            <div><div class="co-emp-name">${this.esc(e.full_name||'Employee')}</div><div class="co-emp-meta">${this.esc(e.role||'employee')}</div></div>
-            <span class="co-status ${active?'':'off'}">${active?'Active':'Inactive'}</span>
-          </div>
-          <div class="co-emp-stats">
-            <div class="co-stat"><b>${as.length}</b><span>ASSIGNMENTS</span></div>
-            <div class="co-stat"><b>${active?'ON':'OFF'}</b><span>ACCOUNT</span></div>
-            <div class="co-stat"><b>—</b><span>HOURS</span></div>
-          </div>
-          <div class="co-emp-actions">
-            <button class="primary" onclick="COEmployees.open('${e.id}')">View employee</button>
-            <button onclick="COEmployees.toggleActive('${e.id}',${active})">${active?'Deactivate':'Activate'}</button>
-          </div>
-        </article>`;
-      }).join(''):`<div class="co-emp-empty">No employees found.</div>`;
-    },
-    async open(id){
-      const e=this.employees.find(x=>x.id===id); if(!e)return;
-      const modal=document.getElementById('coEmpModal');
-      modal.classList.add('open');
-      document.getElementById('coEmpModalBody').innerHTML=`
-        <div class="co-detail-grid">
-          <div class="co-detail-box"><span>Name</span><b>${this.esc(e.full_name||'Employee')}</b></div>
-          <div class="co-detail-box"><span>Status</span><b>${e.active!==false?'Active':'Inactive'}</b></div>
-          <div class="co-detail-box"><span>Role</span><b>${this.esc(e.role||'employee')}</b></div>
-          <div class="co-detail-box"><span>Member since</span><b>${e.created_at?new Date(e.created_at).toLocaleDateString():'—'}</b></div>
-        </div>
-        <div style="margin-top:15px;color:#f5ead6;font-size:11px;font-weight:700;letter-spacing:.08em">RESTAURANT ASSIGNMENTS</div>
-        <div id="coEmpAssignments"></div>
-        <div class="co-assign-row">
-          <select id="coEmpRestaurantSelect"><option value="">Assign restaurant…</option>${this.restaurants.map(r=>`<option value="${r.id}">${this.esc(r.name)}</option>`).join('')}</select>
-          <button onclick="COEmployees.assign('${id}')">Assign</button>
-        </div>
-        <div style="margin-top:15px;color:#8f98a8;font-size:10px;line-height:1.4">
-          Employees create their own accounts. Managers can assign them to one or multiple restaurants here.
-        </div>`;
-      this.renderAssignments(id);
-    },
-    renderAssignments(id){
-      const h=document.getElementById('coEmpAssignments'); if(!h)return;
-      const as=this.assignmentsFor(id);
-      h.innerHTML=as.length?as.map(a=>`<div class="co-assignment"><span>${this.esc(this.restaurantName(a.restaurant_id))}</span><button title="Remove" onclick="COEmployees.removeAssignment('${a.id}','${id}')">×</button></div>`).join(''):`<div style="padding:9px;color:#8f98a8;font-size:10px">No restaurant assignments yet.</div>`;
-    },
-    async assign(empId){
-      const sel=document.getElementById('coEmpRestaurantSelect'), rid=sel?.value;
-      if(!rid)return;
-      const exists=this.assignments.some(a=>a.employee_id===empId&&a.restaurant_id===rid);
-      if(exists){alert('Employee is already assigned to this restaurant.');return}
-      const {data,error}=await window.supabaseClient.from('employee_assignments').insert({employee_id:empId,restaurant_id:rid}).select().single();
-      if(error){alert(error.message);return}
-      this.assignments.push(data); sel.value=''; this.renderAssignments(empId); this.render();
-    },
-    async removeAssignment(aid,empId){
-      const {error}=await window.supabaseClient.from('employee_assignments').delete().eq('id',aid);
-      if(error){alert(error.message);return}
-      this.assignments=this.assignments.filter(a=>a.id!==aid); this.renderAssignments(empId); this.render();
-    },
-    async toggleActive(id,current){
-      const {error}=await window.supabaseClient.from('profiles').update({active:!current}).eq('id',id);
-      if(error){alert(error.message);return}
-      const e=this.employees.find(x=>x.id===id); if(e)e.active=!current; this.render();
-    }
-  };
-  window.COEmployees=E;
-
-  function inject(){
-    if(document.getElementById('coEmployeeDB')) return;
-    const section=document.createElement('section');
-    section.id='coEmployeeDB'; section.className='co-emp-db';
-    section.innerHTML=`
-      <div class="co-emp-head"><div><h2>EMPLOYEES</h2><p>Employee database & assignments</p></div></div>
-      <input id="coEmployeeSearch" class="co-emp-search" placeholder="Search employees…" />
-      <div class="co-emp-list"></div>`;
-    // Prefer the manager area; otherwise append to main.
-    const anchor=[...document.querySelectorAll('h1,h2,h3,button,a')].find(x=>/employee|empleado/i.test(x.textContent||''));
-    (anchor?.closest('section,.card,.panel')?.parentElement||document.querySelector('main')||document.body).appendChild(section);
-    const modal=document.createElement('div');
-    modal.id='coEmpModal'; modal.className='co-emp-modal';
-    modal.innerHTML=`<div class="co-emp-sheet">
-      <div class="co-emp-sheet-head"><b>EMPLOYEE PROFILE</b><button class="co-close" onclick="document.getElementById('coEmpModal').classList.remove('open')">×</button></div>
-      <div id="coEmpModalBody"></div>
-    </div>`;
-    document.body.appendChild(modal);
-    modal.addEventListener('click',e=>{if(e.target===modal)modal.classList.remove('open')});
-    document.getElementById('coEmployeeSearch').addEventListener('input',()=>E.render());
-  }
-
-  async function start(){
-    inject();
-    let tries=0;
-    const t=setInterval(async()=>{
-      tries++;
-      if(window.supabaseClient){
-        clearInterval(t);
-        try{await E.load()}catch(err){console.warn('Employee DB:',err)}
-      }else if(tries>30)clearInterval(t);
-    },500);
-  }
-  document.addEventListener('DOMContentLoaded',start);
-})();
-</script>
-
-
-<style id="co-v7-complete">
-/* CLEANING OPS v7 — unified manager + employee interface */
-:root{
- --v7-bg:#080b12;--v7-panel:#101622;--v7-panel2:#151c29;
- --v7-gold:#d4ae4c;--v7-cream:#f5ead6;--v7-muted:#8f98a8;
- --v7-red:#8f3d43;--v7-red2:#642d33;--v7-line:rgba(255,255,255,.085);
-}
-html,body{background:var(--v7-bg)!important;color:var(--v7-cream)!important}
-body{font-size:14px!important}
-button{cursor:pointer}
-#co-v7-app{max-width:760px;margin:0 auto;padding:0 14px 90px}
-.v7-header{height:62px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:1200;background:rgba(8,11,18,.97);border-bottom:1px solid rgba(212,174,76,.2)}
-.v7-title{font-size:13px;font-weight:800;letter-spacing:.18em}
-.v7-sub{font-size:9px;color:var(--v7-muted);letter-spacing:.08em;margin-top:3px}
-.v7-menu{width:44px!important;height:44px!important;min-height:44px!important;border:0!important;background:transparent!important;padding:9px!important;display:flex!important;flex-direction:column!important;justify-content:center!important;align-items:center!important;gap:5px!important}
-.v7-menu span{width:21px;height:2px;background:var(--v7-cream);border-radius:2px;display:block}
-.v7-hero{padding:18px 0 12px}
-.v7-eyebrow{font-size:9px;color:var(--v7-gold);letter-spacing:.18em;font-weight:800}
-.v7-hero h1{margin:6px 0 0!important;font-size:24px!important;letter-spacing:-.02em}
-.v7-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin:10px 0}
-.v7-card{background:linear-gradient(145deg,var(--v7-panel),#0d121c);border:1px solid var(--v7-line);border-radius:14px;padding:13px}
-.v7-card.red{border-color:rgba(143,61,67,.42)}
-.v7-card.gold{border-color:rgba(212,174,76,.28)}
-.v7-card-label{font-size:8px;letter-spacing:.12em;color:var(--v7-muted);text-transform:uppercase}
-.v7-card-value{font-size:20px;font-weight:800;margin-top:5px}
-.v7-section{margin-top:18px}
-.v7-section-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.v7-section-head h2{margin:0!important;font-size:12px!important;letter-spacing:.13em}
-.v7-link{background:transparent!important;border:0!important;color:var(--v7-gold)!important;font-size:10px!important;padding:4px!important;min-height:28px!important}
-.v7-list{display:grid;gap:7px}
-.v7-row{display:flex;align-items:center;gap:10px;background:var(--v7-panel);border:1px solid var(--v7-line);border-radius:12px;padding:10px}
-.v7-dot{width:8px;height:8px;border-radius:50%;background:var(--v7-gold);flex:none}
-.v7-row-main{min-width:0;flex:1}
-.v7-row-title{font-size:12px;font-weight:700}
-.v7-row-meta{font-size:9px;color:var(--v7-muted);margin-top:2px}
-.v7-actions{display:grid;grid-template-columns:repeat(2,1fr);gap:7px}
-.v7-action{background:var(--v7-panel2)!important;color:var(--v7-cream)!important;border:1px solid var(--v7-line)!important;border-radius:12px!important;min-height:45px!important;font-size:10px!important;text-align:left;padding:9px 11px!important}
-.v7-action strong{display:block;font-size:11px}
-.v7-action span{color:var(--v7-muted);font-size:8px}
-.v7-empty{padding:18px;text-align:center;border:1px dashed var(--v7-line);border-radius:12px;color:var(--v7-muted);font-size:11px}
-.v7-menu-panel{position:fixed;top:0;right:0;bottom:0;width:min(330px,88vw);z-index:3000;background:#0e131d;border-left:1px solid rgba(212,174,76,.25);padding:18px;transform:translateX(105%);transition:transform .2s ease;box-shadow:-20px 0 50px rgba(0,0,0,.35)}
-.v7-menu-panel.open{transform:translateX(0)}
-.v7-menu-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:20px}
-.v7-menu-head b{font-size:12px;letter-spacing:.15em}
-.v7-menu-close{background:transparent!important;color:var(--v7-cream)!important;border:0!important;font-size:22px!important;min-height:32px!important;width:32px!important}
-.v7-menu-item{width:100%;display:flex;align-items:center;justify-content:space-between;background:var(--v7-panel)!important;color:var(--v7-cream)!important;border:1px solid var(--v7-line)!important;border-radius:11px!important;padding:11px!important;margin:6px 0!important;text-align:left}
-.v7-menu-item small{color:var(--v7-muted)}
-.v7-menu-item.danger{border-color:rgba(143,61,67,.45)!important;color:#e7b5b8!important}
-.v7-manager-view,.v7-employee-view{display:none}
-.v7-visible{display:block!important}
-.v7-modal-bg{position:fixed;inset:0;z-index:2900;background:rgba(0,0,0,.68);display:none;align-items:flex-end}
-.v7-modal-bg.open{display:flex}
-.v7-sheet{width:100%;max-width:760px;margin:0 auto;max-height:88vh;overflow:auto;background:#0e131d;border-top:1px solid rgba(212,174,76,.25);border-radius:20px 20px 0 0;padding:16px}
-.v7-form{display:grid;gap:8px}
-.v7-form input,.v7-form select{width:100%;background:var(--v7-panel2)!important;color:var(--v7-cream)!important;border:1px solid var(--v7-line)!important;border-radius:10px!important;padding:10px!important}
-.v7-primary{background:var(--v7-gold)!important;color:#080b12!important;border:0!important;font-weight:800}
-.v7-secondary{background:var(--v7-panel2)!important;color:var(--v7-cream)!important;border:1px solid var(--v7-line)!important}
-.v7-red{background:var(--v7-red2)!important;color:#f3d9da!important;border:1px solid rgba(143,61,67,.55)!important}
-@media(max-width:420px){
- #co-v7-app{padding-left:12px;padding-right:12px}
- .v7-grid{gap:6px}.v7-card{padding:11px}.v7-card-value{font-size:18px}
- .v7-hero h1{font-size:22px!important}
-}
-</style>
-
-<script id="co-v7-complete-js">
-(function(){
- const V={
-  sb:null, profile:null, employees:[], restaurants:[], assignments:[],
-  async init(){
-   if(!window.supabaseClient)return;
-   this.sb=window.supabaseClient;
-   try{
-    const {data:{user}}=await this.sb.auth.getUser();
-    if(!user)return;
-    const {data:p}=await this.sb.from('profiles').select('*').eq('id',user.id).single();
-    this.profile=p||{};
-    const isManager=['manager','owner'].includes(this.profile.role);
-    document.getElementById('v7Manager').classList.toggle('v7-visible',isManager);
-    document.getElementById('v7Employee').classList.toggle('v7-visible',!isManager);
-    if(isManager) await this.managerData(); else await this.employeeData();
-    this.updateRole();
-   }catch(e){console.warn('v7 init',e)}
-  },
-  updateRole(){
-   const role=(this.profile?.role||'employee').toUpperCase();
-   const r=document.getElementById('v7Role'); if(r)r.textContent=role;
-   const n=document.getElementById('v7Name'); if(n)n.textContent=this.profile?.full_name||'Cleaning Ops';
-  },
-  async managerData(){
-   const [e,r,a]=await Promise.all([
-    this.sb.from('profiles').select('*').eq('role','employee').order('full_name'),
-    this.sb.from('restaurants').select('*').order('name'),
-    this.sb.from('employee_assignments').select('*')
-   ]);
-   this.employees=e.data||[];this.restaurants=r.data||[];this.assignments=a.data||[];
-   this.renderManager();
-  },
-  async employeeData(){
-   const {data:{user}}=await this.sb.auth.getUser();
-   const {data:a}=await this.sb.from('employee_assignments').select('*, restaurants(*)').eq('employee_id',user.id);
-   const box=document.getElementById('v7MyAssignments');
-   const rows=a||[];
-   box.innerHTML=rows.length?rows.map(x=>`<div class="v7-row"><div class="v7-dot"></div><div class="v7-row-main"><div class="v7-row-title">${this.esc(x.restaurants?.name||'Restaurant')}</div><div class="v7-row-meta">Assigned location</div></div></div>`).join(''):'<div class="v7-empty">No restaurant assignments yet.</div>';
-  },
-  renderManager(){
-   const em=document.getElementById('v7EmployeeList'),rs=document.getElementById('v7RestaurantList');
-   document.getElementById('v7EmployeeCount').textContent=this.employees.length;
-   document.getElementById('v7RestaurantCount').textContent=this.restaurants.length;
-   em.innerHTML=this.employees.length?this.employees.map(x=>{
-    const n=this.assignments.filter(a=>a.employee_id===x.id).length;
-    return `<button class="v7-row" style="width:100%;text-align:left" onclick="V7.openEmployee('${x.id}')"><div class="v7-dot"></div><div class="v7-row-main"><div class="v7-row-title">${this.esc(x.full_name||'Employee')}</div><div class="v7-row-meta">${n} restaurant assignment${n===1?'':'s'} · ${x.active===false?'Inactive':'Active'}</div></div><span>›</span></button>`;
-   }).join(''):'<div class="v7-empty">No employees have signed up yet.</div>';
-   rs.innerHTML=this.restaurants.length?this.restaurants.map(x=>`<button class="v7-row" style="width:100%;text-align:left" onclick="V7.openRestaurant('${x.id}')"><div class="v7-dot"></div><div class="v7-row-main"><div class="v7-row-title">${this.esc(x.name)}</div><div class="v7-row-meta">${this.esc(x.service_day||'')} ${this.esc(x.service_time||'')}</div></div><span>›</span></button>`).join(''):'<div class="v7-empty">No restaurants configured.</div>';
-  },
-  esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))},
-  openEmployee(id){
-   const e=this.employees.find(x=>x.id===id);if(!e)return;
-   const as=this.assignments.filter(a=>a.employee_id===id);
-   this.sheet(`<div class="v7-menu-head"><b>EMPLOYEE PROFILE</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div>
-   <div class="v7-grid"><div class="v7-card"><div class="v7-card-label">Name</div><div class="v7-card-value" style="font-size:16px">${this.esc(e.full_name)}</div></div><div class="v7-card"><div class="v7-card-label">Status</div><div class="v7-card-value" style="font-size:16px">${e.active===false?'Inactive':'Active'}</div></div></div>
-   <div class="v7-section"><div class="v7-section-head"><h2>RESTAURANT ASSIGNMENTS</h2></div><div class="v7-list">${as.length?as.map(a=>`<div class="v7-row"><div class="v7-row-main"><div class="v7-row-title">${this.esc(this.restaurants.find(r=>r.id===a.restaurant_id)?.name||'Restaurant')}</div></div><button class="v7-link" onclick="V7.removeAssignment('${a.id}','${id}')">Remove</button></div>`).join(''):'<div class="v7-empty">No assignments.</div>'}</div>
-   <div class="v7-form" style="margin-top:10px"><select id="v7AssignRestaurant"><option value="">Assign restaurant…</option>${this.restaurants.map(r=>`<option value="${r.id}">${this.esc(r.name)}</option>`).join('')}</select><button class="v7-primary" onclick="V7.assign('${id}')">Assign Restaurant</button></div></div>
-   <div class="v7-section"><div class="v7-actions"><button class="v7-action" onclick="V7.toggleActive('${id}',${e.active!==false})"><strong>${e.active===false?'Activate':'Deactivate'}</strong><span>Account status</span></button><button class="v7-action" onclick="alert('Work history will appear here as time entries and completed jobs are recorded.')"><strong>Work History</strong><span>Hours & completed jobs</span></button><button class="v7-action" onclick="alert('Photos will appear here as employees upload job photos.')"><strong>Job Photos</strong><span>Before & after</span></button><button class="v7-action" onclick="alert('Checklist history will appear here as jobs are completed.')"><strong>Checklist History</strong><span>Completed work</span></button></div></div>`);
-  },
-  openRestaurant(id){
-   const r=this.restaurants.find(x=>x.id===id);if(!r)return;
-   this.sheet(`<div class="v7-menu-head"><b>RESTAURANT</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div>
-   <div class="v7-form"><label>Name<input id="v7RName" value="${this.esc(r.name)}"></label><label>Service day<input id="v7RDay" value="${this.esc(r.service_day||'')}"></label><label>Service time<input id="v7RTime" value="${this.esc(r.service_time||'')}"></label><button class="v7-primary" onclick="V7.saveRestaurant('${id}')">Save Changes</button></div>
-   <div class="v7-section"><div class="v7-actions"><button class="v7-action" onclick="alert('Checklist configuration is connected to the detailed checklist tables. The full configuration editor is the next manager control.')"><strong>Checklist Setup</strong><span>Equipment & rotations</span></button><button class="v7-action" onclick="alert('Bathroom configuration is connected to restaurant_bathrooms.')"><strong>Bathrooms</strong><span>Fixtures & required service</span></button></div></div>`);
-  },
-  async saveRestaurant(id){
-   const patch={name:document.getElementById('v7RName').value.trim(),service_day:document.getElementById('v7RDay').value.trim(),service_time:document.getElementById('v7RTime').value.trim()};
-   const {error}=await this.sb.from('restaurants').update(patch).eq('id',id);
-   if(error){alert(error.message);return} await this.managerData();this.closeSheet();
-  },
-  async assign(empId){
-   const rid=document.getElementById('v7AssignRestaurant')?.value;if(!rid)return;
-   if(this.assignments.some(a=>a.employee_id===empId&&a.restaurant_id===rid)){alert('Already assigned.');return}
-   const {data,error}=await this.sb.from('employee_assignments').insert({employee_id:empId,restaurant_id:rid}).select().single();
-   if(error){alert(error.message);return}this.assignments.push(data);this.openEmployee(empId);this.renderManager();
-  },
-  async removeAssignment(aid,empId){
-   const {error}=await this.sb.from('employee_assignments').delete().eq('id',aid);
-   if(error){alert(error.message);return}this.assignments=this.assignments.filter(a=>a.id!==aid);this.openEmployee(empId);this.renderManager();
-  },
-  async toggleActive(id,current){
-   const {error}=await this.sb.from('profiles').update({active:!current}).eq('id',id);
-   if(error){alert(error.message);return}await this.managerData();this.closeSheet();
-  },
-  sheet(content){const s=document.getElementById('v7Sheet');document.getElementById('v7SheetContent').innerHTML=content;s.classList.add('open')},
-  closeSheet(){document.getElementById('v7Sheet').classList.remove('open')}
- };
- window.V7=V;
- function build(){
-  if(document.getElementById('co-v7-app'))return;
-  const app=document.createElement('div');app.id='co-v7-app';
-  app.innerHTML=`
-   <header class="v7-header"><div><div class="v7-title">CLEANING OPS</div><div class="v7-sub"><span id="v7Name">OPERATIONS</span> · <span id="v7Role">EMPLOYEE</span></div></div>
-   <button class="v7-menu" id="v7MenuBtn" aria-label="Menu"><span></span><span></span><span></span></button></header>
-   <div id="v7Manager" class="v7-manager-view">
-    <div class="v7-hero"><div class="v7-eyebrow">MANAGEMENT</div><h1>Operations Dashboard</h1></div>
-    <div class="v7-grid"><div class="v7-card gold"><div class="v7-card-label">Employees</div><div class="v7-card-value" id="v7EmployeeCount">0</div></div><div class="v7-card red"><div class="v7-card-label">Restaurants</div><div class="v7-card-value" id="v7RestaurantCount">0</div></div></div>
-    <div class="v7-section"><div class="v7-section-head"><h2>QUICK ACTIONS</h2></div><div class="v7-actions"><button class="v7-action" onclick="V7.showEmployees()"><strong>Employees</strong><span>Manage people & assignments</span></button><button class="v7-action" onclick="V7.showRestaurants()"><strong>Restaurants</strong><span>Edit locations & schedules</span></button><button class="v7-action" onclick="V7.showChecklist()"><strong>Checklist</strong><span>Tasks & rotations</span></button><button class="v7-action" onclick="alert('Reports will use recorded jobs, time entries, photos and signatures.')"><strong>Reports</strong><span>Work & completion</span></button></div></div>
-    <div class="v7-section"><div class="v7-section-head"><h2>EMPLOYEES</h2><button class="v7-link" onclick="V7.showEmployees()">VIEW ALL</button></div><div id="v7EmployeeList" class="v7-list"></div></div>
-    <div class="v7-section"><div class="v7-section-head"><h2>RESTAURANTS</h2><button class="v7-link" onclick="V7.showRestaurants()">VIEW ALL</button></div><div id="v7RestaurantList" class="v7-list"></div></div>
-   </div>
-   <div id="v7Employee" class="v7-employee-view">
-    <div class="v7-hero"><div class="v7-eyebrow">MY WORK</div><h1>Today's Operations</h1></div>
-    <div class="v7-section"><div class="v7-section-head"><h2>MY RESTAURANTS</h2></div><div id="v7MyAssignments" class="v7-list"></div></div>
-    <div class="v7-section"><div class="v7-actions"><button class="v7-action" onclick="alert('Clock in is handled by the existing time-entry workflow.')"><strong>Clock In</strong><span>Start today's service</span></button><button class="v7-action" onclick="alert('Your detailed checklist is ready in the cleaning workflow.')"><strong>Checklist</strong><span>Complete cleaning tasks</span></button><button class="v7-action" onclick="alert('Use the existing photo workflow to upload before/after photos.')"><strong>Photos</strong><span>Before & after</span></button><button class="v7-action" onclick="alert('Signature appears when the job is ready to complete.')"><strong>Complete</strong><span>Sign & clock out</span></button></div></div>
-   </div>
-  `;
-  document.body.prepend(app);
-  const panel=document.createElement('aside');panel.id='v7MenuPanel';panel.className='v7-menu-panel';
-  panel.innerHTML=`<div class="v7-menu-head"><b>MENU</b><button class="v7-menu-close" id="v7Close">×</button></div>
-   <button class="v7-menu-item" onclick="V7.showDashboard()">Dashboard <small>Home</small></button>
-   <button class="v7-menu-item" onclick="V7.showEmployees()">Employees <small>Manage</small></button>
-   <button class="v7-menu-item" onclick="V7.showRestaurants()">Restaurants <small>Manage</small></button>
-   <button class="v7-menu-item" onclick="V7.showChecklist()">Checklist <small>Configure</small></button>
-   <button class="v7-menu-item" onclick="alert('Settings: language, account and logout are available here.')">Settings <small>Account</small></button>
-   <button class="v7-menu-item danger" onclick="V7.logout()">Log out</button>`;
-  document.body.appendChild(panel);
-  const sheet=document.createElement('div');sheet.id='v7Sheet';sheet.className='v7-modal-bg';sheet.innerHTML='<div class="v7-sheet" id="v7SheetContent"></div>';document.body.appendChild(sheet);
-  sheet.addEventListener('click',e=>{if(e.target===sheet)V7.closeSheet()});
-  document.getElementById('v7MenuBtn').onclick=()=>panel.classList.add('open');
-  document.getElementById('v7Close').onclick=()=>panel.classList.remove('open');
+ if(!assignment)return toast('No assignment');
+ const before=$('beforeFile')?.files?.[0],after=$('afterFile')?.files?.[0];
+ if(!before&&!after)return toast('Choose a photo');
+ for(const [type,file] of [['before',before],['after',after]]){
+  if(!file)continue;
+  const ext=(file.name.split('.').pop()||'jpg').toLowerCase();
+  const path=`${session.user.id}/${assignment.id}/${type}-${Date.now()}.${ext}`;
+  const up=await supabase.storage.from('job-photos').upload(path,file,{contentType:file.type||'image/jpeg',upsert:false});
+  if(up.error)return toast(up.error.message);
+  const rec=await supabase.from('job_photos').insert({assignment_id:assignment.id,employee_id:session.user.id,photo_type:type,storage_path:path});
+  if(rec.error)return toast(rec.error.message);
+  await supabase.from('notifications').insert({type:'photo_uploaded',title:`${type} photo uploaded`,body:`${profile.full_name||'Employee'} uploaded a ${type} photo.`,related_id:assignment.id});
  }
- V.showDashboard=function(){document.getElementById('v7MenuPanel').classList.remove('open');document.getElementById('v7Manager').classList.toggle('v7-visible',['manager','owner'].includes(this.profile?.role));document.getElementById('v7Employee').classList.toggle('v7-visible',!['manager','owner'].includes(this.profile?.role));};
- V.showEmployees=function(){this.closeSheet();this.sheet(`<div class="v7-menu-head"><b>EMPLOYEE DATABASE</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div><input class="v7-search" style="width:100%;background:#151c29;color:#f5ead6;border:1px solid rgba(255,255,255,.08);border-radius:10px;padding:10px" placeholder="Search employees…" oninput="V7.filterEmployees(this.value)"><div id="v7AllEmployees" class="v7-list" style="margin-top:9px"></div>`);this.renderAllEmployees();};
- V.filterEmployees=function(q){const box=document.getElementById('v7AllEmployees');const list=this.employees.filter(e=>(e.full_name||'').toLowerCase().includes((q||'').toLowerCase()));box.innerHTML=list.map(e=>`<button class="v7-row" style="width:100%;text-align:left" onclick="V7.openEmployee('${e.id}')"><div class="v7-dot"></div><div class="v7-row-main"><div class="v7-row-title">${this.esc(e.full_name)}</div><div class="v7-row-meta">${e.active===false?'Inactive':'Active'}</div></div><span>›</span></button>`).join('')||'<div class="v7-empty">No employees found.</div>';};
- V.renderAllEmployees=function(){this.filterEmployees('')};
- V.showRestaurants=function(){this.sheet(`<div class="v7-menu-head"><b>RESTAURANT DATABASE</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div><div class="v7-list">${this.restaurants.map(r=>`<button class="v7-row" style="width:100%;text-align:left" onclick="V7.openRestaurant('${r.id}')"><div class="v7-dot"></div><div class="v7-row-main"><div class="v7-row-title">${this.esc(r.name)}</div><div class="v7-row-meta">${this.esc(r.service_day||'')} ${this.esc(r.service_time||'')}</div></div><span>›</span></button>`).join('')}</div>`)};
- V.showChecklist=function(){this.sheet(`<div class="v7-menu-head"><b>CHECKLIST MANAGEMENT</b><button class="v7-menu-close" onclick="V7.closeSheet()">×</button></div><div class="v7-empty">Detailed checklist data is connected to Supabase. Restaurant-specific equipment, required items, rotations and mandatory bathrooms will be managed here next.</div>`)};
- V.logout=async function(){if(this.sb)await this.sb.auth.signOut();location.reload()};
- document.addEventListener('DOMContentLoaded',()=>{build();let n=0;const t=setInterval(()=>{n++;if(window.supabaseClient){clearInterval(t);V.init()}if(n>30)clearInterval(t)},500)});
-})();
+ toast('Photos uploaded');await renderWork();
+}
+
+async function checklistManager(){
+ const [c,i,s,b]=await Promise.all([
+  supabase.from('checklist_categories').select('*').eq('active',true).order('sort_order'),
+  supabase.from('checklist_items').select('*').eq('active',true).order('sort_order'),
+  supabase.from('checklist_subtasks').select('*').eq('active',true).order('sort_order'),
+  supabase.from('restaurant_bathrooms').select('*').eq('active',true)
+ ]);
+ const cats=c.data||[],items=i.data||[],subs=s.data||[],baths=b.data||[];
+ openModal(T('checkSetup'),`
+  <p>Detailed checklist catalog is connected. Bathrooms remain mandatory on every service day.</p>
+  <div class="list">
+   ${cats.map(cat=>`<div class="checkcat"><button class="checkcathead" type="button"><b>${esc(cat.name)}</b><span>⌄</span></button>
+    <div class="checkcatbody">${items.filter(x=>x.category_id===cat.id).map(it=>`<div class="checkitem"><b>${esc(it.name)}</b>${it.description?`<small>${esc(it.description)}</small>`:''}${subs.filter(x=>x.item_id===it.id).map(st=>`<div class="subtask">${esc(st.name)}</div>`).join('')}</div>`).join('')||'<div class="subtask">No items configured.</div>'}</div>
+   </div>`).join('')}
+   <div class="checkcat open"><button class="checkcathead" type="button"><b>Bathrooms — Mandatory</b><span>⌄</span></button>
+    <div class="checkcatbody">${baths.length?baths.map(b=>`<div class="checkitem"><b>${esc(b.name||'Bathroom')}</b><small>${Number(b.toilet_count||0)} toilets • ${Number(b.urinal_count||0)} urinals • ${Number(b.sink_count||0)} sinks</small></div>`).join(''):'<div class="subtask">No bathroom configuration yet.</div>'}</div>
+   </div>
+  </div>`);
+ document.querySelectorAll('.checkcathead').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'));
+}
+
+function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.add('open')}
+function closeModal(){$('modal').classList.remove('open')}
+$('modalClose').onclick=closeModal;
+$('modal').addEventListener('click',e=>{if(e.target===$('modal'))closeModal()});
+
+$('menuBtn').onclick=()=>$('drawer').classList.add('open');
+$('closeDrawer').onclick=()=>$('drawer').classList.remove('open');
+$('drawer').addEventListener('click',e=>{if(e.target===$('drawer'))$('drawer').classList.remove('open')});
+$('langEn').onclick=()=>{lang='en';localStorage.setItem('cleaning_ops_lang',lang);$('drawer').classList.remove('open');if(session)renderShell();else loginScreen()};
+$('langEs').onclick=()=>{lang='es';localStorage.setItem('cleaning_ops_lang',lang);$('drawer').classList.remove('open');if(session)renderShell();else loginScreen()};
+$('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()};
+
+supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
+boot();
 </script>
-
-
-<script id="co-v8-manager-js">
-(function(){
- const M={
-  sb:null, employees:[], restaurants:[], assignments:[],
-  async load(){
-   if(!window.supabaseClient)return;
-   this.sb=window.supabaseClient;
-   const {data:{user}}=await this.sb.auth.getUser();
-   if(!user)return;
-   const {data:p}=await this.sb.from('profiles').select('*').eq('id',user.id).single();
-   if(!p || !['manager','owner'].includes(p.role)) return;
-   const [e,r,a]=await Promise.all([
-    this.sb.from('profiles').select('*').eq('role','employee').order('full_name'),
-    this.sb.from('restaurants').select('*').order('name'),
-    this.sb.from('employee_assignments').select('*')
-   ]);
-   if(e.error||r.error||a.error){console.warn(e.error||r.error||a.error);return}
-   this.employees=e.data||[];this.restaurants=r.data||[];this.assignments=a.data||[];
-   this.mount();
-  },
-  esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[m]))},
-  mount(){
-   if(document.getElementById('v8Control'))return;
-   const host=document.createElement('section');host.id='v8Control';host.className='v8-control';
-   host.innerHTML=`
-    <div class="v7-section-head"><h2>MANAGER CONTROL CENTER</h2><span class="v8-pill">LIVE</span></div>
-    <div class="v8-admin-grid">
-      <button class="v8-admin-card" onclick="V8.employeesPanel()"><b>Employees</b><span>${this.employees.length} accounts</span></button>
-      <button class="v8-admin-card" onclick="V8.restaurantsPanel()"><b>Restaurants</b><span>${this.restaurants.length} locations</span></button>
-      <button class="v8-admin-card" onclick="V8.assignmentsPanel()"><b>Assignments</b><span>${this.assignments.length} active</span></button>
-      <button class="v8-admin-card" onclick="V8.checklistPanel()"><b>Checklist</b><span>Configure operations</span></button>
-    </div>
-    <div class="v8-admin-section"><h3>EMPLOYEE MANAGEMENT</h3><div id="v8EmployeeRows"></div></div>
-    <div class="v8-admin-section"><h3>RESTAURANT MANAGEMENT</h3><div id="v8RestaurantRows"></div></div>`;
-   const mgr=document.getElementById('v7Manager');
-   (mgr||document.querySelector('main')||document.body).appendChild(host);
-   this.render();
-  },
-  render(){
-   const er=document.getElementById('v8EmployeeRows'),rr=document.getElementById('v8RestaurantRows');
-   if(er)er.innerHTML=this.employees.slice(0,5).map(e=>this.employeeRow(e)).join('')||'<div class="v7-empty">No employees yet.</div>';
-   if(rr)rr.innerHTML=this.restaurants.slice(0,5).map(r=>this.restaurantRow(r)).join('')||'<div class="v7-empty">No restaurants yet.</div>';
-  },
-  employeeRow(e){
-   const n=this.assignments.filter(a=>a.employee_id===e.id).length;
-   return `<div class="v8-admin-row"><div class="v7-dot"></div><div class="v8-admin-row-main"><b>${this.esc(e.full_name||'Employee')}</b><span>${n} assignment${n===1?'':'s'} · ${e.active===false?'Inactive':'Active'}</span></div><button class="gold" onclick="V8.editEmployee('${e.id}')">Manage</button></div>`;
-  },
-  restaurantRow(r){
-   return `<div class="v8-admin-row"><div class="v7-dot"></div><div class="v8-admin-row-main"><b>${this.esc(r.name)}</b><span>${this.esc(r.service_day||'')} ${this.esc(r.service_time||'')}</span></div><button class="gold" onclick="V8.editRestaurant('${r.id}')">Edit</button></div>`;
-  },
-  sheet(title,body){
-   const s=document.getElementById('v7Sheet');
-   document.getElementById('v7SheetContent').innerHTML=`<div class="v7-menu-head"><b>${title}</b><button class="v7-menu-close" onclick="V8.close()">×</button></div>${body}`;
-   s.classList.add('open');
-  },
-  close(){document.getElementById('v7Sheet')?.classList.remove('open')},
-  employeesPanel(){
-   this.sheet('EMPLOYEES',`<div class="v8-toolbar"><input placeholder="Search employees…" oninput="V8.filterEmployees(this.value)"></div><div id="v8AllRows" class="v7-list"></div>`);
-   this.filterEmployees('');
-  },
-  filterEmployees(q){
-   const box=document.getElementById('v8AllRows');if(!box)return;
-   const list=this.employees.filter(e=>(e.full_name||'').toLowerCase().includes((q||'').toLowerCase()));
-   box.innerHTML=list.map(e=>this.employeeRow(e)).join('')||'<div class="v7-empty">No employees found.</div>';
-  },
-  editEmployee(id){
-   const e=this.employees.find(x=>x.id===id);if(!e)return;
-   const as=this.assignments.filter(a=>a.employee_id===id);
-   this.sheet('EMPLOYEE MANAGEMENT',`
-    <div class="v7-grid">
-      <div class="v7-card"><div class="v7-card-label">Employee</div><div class="v7-card-value" style="font-size:15px">${this.esc(e.full_name||'Employee')}</div></div>
-      <div class="v7-card"><div class="v7-card-label">Status</div><div class="v7-card-value" style="font-size:15px">${e.active===false?'Inactive':'Active'}</div></div>
-    </div>
-    <div class="v8-admin-section"><h3>RESTAURANT ASSIGNMENTS</h3><div>${as.length?as.map(a=>`<div class="v8-admin-row"><div class="v8-admin-row-main"><b>${this.esc(this.restaurants.find(r=>r.id===a.restaurant_id)?.name||'Restaurant')}</b></div><button onclick="V8.removeAssignment('${a.id}','${id}')">Remove</button></div>`).join(''):'<div class="v7-empty">No assignments.</div>'}</div>
-    <div class="v8-editor"><label>ASSIGN RESTAURANT<select id="v8Assign"><option value="">Select restaurant…</option>${this.restaurants.map(r=>`<option value="${r.id}">${this.esc(r.name)}</option>`).join('')}</select></label><button class="v7-primary" onclick="V8.assign('${id}')">Assign Restaurant</button></div>
-    <div class="v8-actions"><button class="v7-secondary" onclick="V8.toggle('${id}',${e.active!==false})">${e.active===false?'Activate':'Deactivate'} Account</button><button class="v7-secondary" onclick="V8.employeeHistory('${id}')">Work History</button></div>`);
-  },
-  async assign(empId){
-   const rid=document.getElementById('v8Assign')?.value;if(!rid)return;
-   if(this.assignments.some(a=>a.employee_id===empId&&a.restaurant_id===rid)){alert('Already assigned.');return}
-   const {data,error}=await this.sb.from('employee_assignments').insert({employee_id:empId,restaurant_id:rid}).select().single();
-   if(error){alert(error.message);return}
-   this.assignments.push(data);this.editEmployee(empId);this.render();
-  },
-  async removeAssignment(aid,empId){
-   const {error}=await this.sb.from('employee_assignments').delete().eq('id',aid);
-   if(error){alert(error.message);return}
-   this.assignments=this.assignments.filter(a=>a.id!==aid);this.editEmployee(empId);this.render();
-  },
-  async toggle(id,current){
-   const {error}=await this.sb.from('profiles').update({active:!current}).eq('id',id);
-   if(error){alert(error.message);return}
-   const e=this.employees.find(x=>x.id===id);if(e)e.active=!current;this.editEmployee(id);this.render();
-  },
-  async employeeHistory(id){
-   const [t,p,c]=await Promise.all([
-    this.sb.from('time_entries').select('*').eq('employee_id',id).order('clock_in',{ascending:false}).limit(30),
-    this.sb.from('job_photos').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30),
-    this.sb.from('completion_signatures').select('*').eq('employee_id',id).order('created_at',{ascending:false}).limit(30)
-   ]);
-   this.sheet('WORK HISTORY',`<div class="v7-grid"><div class="v7-card"><div class="v7-card-label">Time entries</div><div class="v7-card-value">${(t.data||[]).length}</div></div><div class="v7-card"><div class="v7-card-label">Photos</div><div class="v7-card-value">${(p.data||[]).length}</div></div><div class="v7-card"><div class="v7-card-label">Signatures</div><div class="v7-card-value">${(c.data||[]).length}</div></div></div><div class="v7-empty" style="margin-top:10px">Detailed history records will appear here as employees complete jobs.</div>`);
-  },
-  restaurantsPanel(){
-   this.sheet('RESTAURANTS',`<button class="v7-primary" style="width:100%;margin-bottom:9px" onclick="V8.newRestaurant()">Add Restaurant</button><div class="v7-list">${this.restaurants.map(r=>this.restaurantRow(r)).join('')}</div>`);
-  },
-  editRestaurant(id){
-   const r=this.restaurants.find(x=>x.id===id);if(!r)return;
-   this.sheet('EDIT RESTAURANT',`<div class="v8-editor"><label>NAME<input id="v8RN" value="${this.esc(r.name)}"></label><label>SERVICE DAY<input id="v8RD" value="${this.esc(r.service_day||'')}"></label><label>SERVICE TIME<input id="v8RT" value="${this.esc(r.service_time||'')}"></label><button class="v7-primary" onclick="V8.saveRestaurant('${id}')">Save Changes</button></div><div class="v8-actions"><button class="v7-secondary" onclick="V8.restaurantChecklist('${id}')">Checklist Setup</button><button class="v7-secondary" onclick="V8.restaurantBathrooms('${id}')">Bathrooms</button></div>`);
-  },
-  newRestaurant(){
-   this.sheet('ADD RESTAURANT',`<div class="v8-editor"><label>NAME<input id="v8RN" placeholder="Restaurant name"></label><label>SERVICE DAY<input id="v8RD" placeholder="Monday"></label><label>SERVICE TIME<input id="v8RT" placeholder="4:00 AM"></label><button class="v7-primary" onclick="V8.createRestaurant()">Create Restaurant</button></div>`);
-  },
-  async saveRestaurant(id){
-   const patch={name:document.getElementById('v8RN').value.trim(),service_day:document.getElementById('v8RD').value.trim(),service_time:document.getElementById('v8RT').value.trim()};
-   const {error}=await this.sb.from('restaurants').update(patch).eq('id',id);if(error){alert(error.message);return}
-   await this.load();this.restaurantsPanel();
-  },
-  async createRestaurant(){
-   const patch={name:document.getElementById('v8RN').value.trim(),service_day:document.getElementById('v8RD').value.trim(),service_time:document.getElementById('v8RT').value.trim()};
-   if(!patch.name){alert('Restaurant name is required.');return}
-   const {error}=await this.sb.from('restaurants').insert(patch);if(error){alert(error.message);return}
-   await this.load();this.restaurantsPanel();
-  },
-  assignmentsPanel(){
-   this.sheet('ASSIGNMENTS',`<div class="v7-empty">All active employee-to-restaurant assignments are managed from each employee profile.</div>`);
-  },
-  checklistPanel(){
-   this.sheet('CHECKLIST MANAGEMENT',`<div class="v7-list">
-    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Equipment & Areas</b><span>Kitchen, refrigeration, washing, surfaces, ventilation, floors, bar, exterior</span></div><button class="gold" onclick="V8.restaurantChecklist(null)">Open</button></div>
-    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Bathrooms</b><span>Mandatory every service day</span></div><button class="gold" onclick="V8.restaurantBathrooms(null)">Open</button></div>
-    <div class="v8-admin-row"><div class="v8-admin-row-main"><b>Rotations</b><span>Weekly cleaning rotation foundation</span></div><button class="gold" onclick="alert('Rotation editor is the next checklist-management step.')">Open</button></div>
-   </div>`);
-  },
-  restaurantChecklist(id){
-   this.sheet('CHECKLIST SETUP',`<div class="v7-empty">The detailed checklist tables are connected. This editor will let managers choose which equipment and subtasks apply to each restaurant while preserving required bathroom service.</div>`);
-  },
-  restaurantBathrooms(id){
-   this.sheet('BATHROOM SETUP',`<div class="v7-empty">Bathrooms are configured separately and remain mandatory on every service day. Fixture counts can be managed from the restaurant bathroom configuration.</div>`);
-  }
- };
- window.V8=M;
- document.addEventListener('DOMContentLoaded',()=>{let n=0;const t=setInterval(()=>{n++;if(window.supabaseClient){clearInterval(t);M.load()}if(n>30)clearInterval(t)},500)});
-})();
-</script>
-
-</body></html>
+</body>
+</html>
