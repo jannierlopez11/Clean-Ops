@@ -492,7 +492,7 @@ function renderShell(){
  $('bottomNav').innerHTML=`
  <button data-tab="home"><span class="navline"></span>${T('home')}</button>
  <button data-tab="schedule"><span class="navline"></span>${T('schedule')}</button>
- ${isManagement()?`<button data-tab="team"><span class="navline"></span>${T('team')}</button>`:''}
+ ${isManagement()?`<><button data-tab="team"><span class="navline"></span>${T('team')}</button><button data-tab="history"><span class="navline"></span>${T('history')}</button></>`:''}
  <button data-tab="work"><span class="navline"></span>${T('work')}</button>`;
  $('bottomNav').querySelectorAll('[data-tab]').forEach(b=>b.onclick=()=>showTab(b.dataset.tab));
 }
@@ -501,6 +501,7 @@ async function render(){
  if(tab==='home')await renderHome();
  if(tab==='schedule')await renderSchedule();
  if(tab==='team')await renderTeam();
+ if(tab==='history')await renderHistory();
  if(tab==='work')await renderWork();
 }
 
@@ -617,6 +618,34 @@ $('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()
 
 supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
 boot();
+</script>
+
+<script id="v911-work-history-js">
+(function(){
+ const e=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+ const date=s=>s?new Date(s+'T12:00:00').toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric',year:'numeric'}):'—';
+ const time=s=>s?new Date(s).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'}):'—';
+ const mins=n=>n?`${Math.floor(n/60)}h ${n%60}m`:'—';
+ const dur=(a,b)=>a&&b?Math.max(0,Math.round((new Date(b)-new Date(a))/60000)):0;
+ window.renderHistory=async function(){
+  if(!isManagement())return;
+  const [aa,tt,pp,ss]=await Promise.all([
+   supabase.from('employee_assignments').select('id,employee_id,restaurant_id,work_date,status').order('work_date',{ascending:false}).limit(500),
+   supabase.from('time_entries').select('id,assignment_id,employee_id,clock_in,clock_out').order('clock_in',{ascending:false}).limit(1000),
+   supabase.from('job_photos').select('id,assignment_id,employee_id,photo_type,storage_path,created_at').order('created_at',{ascending:false}).limit(1000),
+   supabase.from('completion_signatures').select('*').order('created_at',{ascending:false}).limit(1000)
+  ]);
+  if(aa.error){$('content').innerHTML=`<div class="card"><div class="empty">${e(aa.error.message)}</div></div>`;return;}
+  const tm={},pm={},sm={};(tt.data||[]).forEach(x=>(tm[x.assignment_id]??=[]).push(x));(pp.data||[]).forEach(x=>(pm[x.assignment_id]??=[]).push(x));(ss.data||[]).forEach(x=>sm[x.assignment_id]=x);
+  const rm={},em={};(restaurants||[]).forEach(x=>rm[x.id]=x);(employees||[]).forEach(x=>em[x.id]=x);
+  const rows=(aa.data||[]).map(a=>{const ts=tm[a.id]||[],ps=pm[a.id]||[],last=ts[0];return {a,r:rm[a.restaurant_id]?.name||'Unknown restaurant',u:em[a.employee_id]?.full_name||'Employee',d:a.work_date||'',m:mins(ts.reduce((n,x)=>n+dur(x.clock_in,x.clock_out),0)),ci:last?.clock_in,co:last?.clock_out,p:ps.length,b:ps.some(x=>x.photo_type==='before'),af:ps.some(x=>x.photo_type==='after'),sig:!!sm[a.id],done:a.status==='completed'};});
+  const opts=(xs,p)=>`<option value="">${p}</option>`+xs.map(x=>`<option value="${e(x)}">${e(x)}</option>`).join('');
+  const rid='histRestaurant',uid='histEmployee',did='histDate',sid='histStatus';
+  $('content').innerHTML=`<div class="hero"><div class="eyebrow">MANAGEMENT</div><h1>Work History</h1><p>Review service records by restaurant, employee, and date.</p></div><div class="card"><div class="sectionhead"><div><div class="eyebrow">REPORTS</div><h3>Job Records</h3></div><div class="tiny" id="historyCount"></div></div><div class="field"><label>Restaurant<select id="${rid}">${opts([...new Set(rows.map(x=>x.r))].sort(),'All restaurants')}</select></label></div><div class="field"><label>Employee<select id="${uid}">${opts([...new Set(rows.map(x=>x.u))].sort(),'All employees')}</select></label></div><div class="field"><label>Service date<input id="${did}" type="date"></label></div><div class="field"><label>Status<select id="${sid}"><option value="">All statuses</option><option value="completed">Completed</option><option value="progress">In progress</option></select></label></div></div><div id="historyResults"></div>`;
+  const draw=()=>{const rf=$(rid).value,uf=$(uid).value,df=$(did).value,sf=$(sid).value;const f=rows.filter(x=>(!rf||x.r===rf)&&(!uf||x.u===uf)&&(!df||x.d===df)&&(!sf||(sf==='completed'?x.done:!x.done)));$('historyCount').textContent=`${f.length} job${f.length===1?'':'s'} • ${f.reduce((n,x)=>n+x.p,0)} photo${f.reduce((n,x)=>n+x.p,0)===1?'':'s'}`;$('historyResults').innerHTML=f.map(x=>`<div class="card" style="margin-top:10px"><div class="sectionhead"><div><div class="eyebrow">${e(x.r)}</div><h3 style="margin:3px 0">${e(x.u)}</h3><div class="rowmeta">${e(date(x.d))}</div></div><span class="badge ${x.done?'':'off'}">${x.done?'COMPLETED':'IN PROGRESS'}</span></div><div class="stats" style="margin-top:10px;grid-template-columns:repeat(2,minmax(0,1fr))"><div class="stat"><div class="statlabel">TIME</div><div class="statvalue">${e(x.m)}</div></div><div class="stat"><div class="statlabel">PHOTOS</div><div class="statvalue">${x.p}</div></div></div><div class="rowmeta" style="margin-top:10px">Clock in ${e(time(x.ci))} • Clock out ${e(time(x.co))}</div><div class="rowmeta" style="margin-top:5px">Before ${x.b?'✓':'—'} • After ${x.af?'✓':'—'} • Signature ${x.sig?'✓':'—'}</div></div>`).join('')||'<div class="card"><div class="empty">No work records match these filters.</div></div>';};
+  [rid,uid,did,sid].forEach(id=>$(id).addEventListener('change',draw));draw();
+ };
+})();
 </script>
 
 <script id="v95-announcements-js">
