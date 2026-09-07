@@ -225,6 +225,20 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
 })();
 </script>
 
+
+<style id="announcements-only-css">
+.announcement-card{border:1px solid rgba(216,180,91,.22);background:linear-gradient(145deg,rgba(216,180,91,.08),rgba(255,255,255,.025))}
+.announcement-item{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.announcement-item:last-child{border-bottom:0}
+.announcement-title{font-weight:750;font-size:15px}
+.announcement-meta{font-size:12px;opacity:.68;margin-top:4px}
+.announcement-body{font-size:14px;line-height:1.5;margin-top:8px;white-space:pre-wrap}
+.announcement-compose{display:grid;gap:10px;margin-top:12px}
+.announcement-compose textarea{min-height:110px;resize:vertical}
+.announcement-compose input,.announcement-compose textarea,.announcement-compose select{width:100%;box-sizing:border-box}
+#announcementsBtn{min-height:48px!important;touch-action:manipulation!important}
+.announcement-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--gold);color:#0a0c11;font-size:11px;font-weight:800;margin-left:6px}
+</style>
 </head>
 <body>
 <div class="app">
@@ -261,6 +275,10 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
         <button class="btn secondary" id="langEn">English</button>
         <button class="btn secondary" id="langEs">Español</button>
       </div>
+    </div>
+    <div class="card">
+      <h3>UPDATES</h3>
+      <button class="btn secondary" id="announcementsBtn" type="button">Announcements</button>
     </div>
     <div class="card">
       <h3>ACCOUNT</h3>
@@ -728,6 +746,93 @@ $('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()
 
 supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
 boot();
+</script>
+
+<script id="announcements-only-js">
+(function(){
+  async function loadAnnouncements(){
+    if(typeof supabase==='undefined') return [];
+    const {data,error}=await supabase.from('announcements')
+      .select('id,title,body,audience,priority,active,created_at,created_by')
+      .eq('active',true)
+      .order('created_at',{ascending:false});
+    if(error){ console.error('Announcements:',error); return []; }
+    return data||[];
+  }
+
+  function visible(a){
+    const role=(typeof profile!=='undefined'&&profile?.role)||'employee';
+    if(a.audience==='everyone') return true;
+    if(a.audience==='managers') return role==='manager'||role==='owner';
+    if(a.audience==='employees') return role==='employee';
+    return true;
+  }
+
+  function escA(s){
+    return String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+  }
+
+  async function showAnnouncements(){
+    const role=(typeof profile!=='undefined'&&profile?.role)||'';
+    const items=(await loadAnnouncements()).filter(visible);
+    const rows=items.length?items.map(a=>`
+      <div class="announcement-item">
+        <div class="announcement-title">${escA(a.title||'Announcement')}</div>
+        <div class="announcement-meta">${a.priority==='urgent'?'URGENT • ':a.priority==='important'?'IMPORTANT • ':''}${new Date(a.created_at).toLocaleDateString()}</div>
+        <div class="announcement-body">${escA(a.body||'')}</div>
+      </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
+
+    const ownerForm=role==='owner'?`
+      <div class="announcement-compose">
+        <input id="annTitleOnly" placeholder="Title">
+        <textarea id="annBodyOnly" placeholder="Write your announcement..."></textarea>
+        <select id="annAudienceOnly">
+          <option value="everyone">Everyone</option>
+          <option value="employees">Employees</option>
+          <option value="managers">Managers</option>
+        </select>
+        <select id="annPriorityOnly">
+          <option value="normal">Normal</option>
+          <option value="important">Important</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <button class="btn gold" id="publishAnnouncementOnly" type="button">Publish Announcement</button>
+      </div>`:'';
+
+    openModal('ANNOUNCEMENTS',`
+      <section class="card announcement-card">
+        ${ownerForm}
+        <div class="announcement-list" style="margin-top:14px">${rows}</div>
+      </section>`);
+
+    const publish=$('publishAnnouncementOnly');
+    if(publish){
+      publish.onclick=async()=>{
+        const title=$('annTitleOnly').value.trim();
+        const body=$('annBodyOnly').value.trim();
+        if(!title||!body) return toast('Title and message are required');
+        const {error}=await supabase.from('announcements').insert({
+          title,body,
+          audience:$('annAudienceOnly').value,
+          priority:$('annPriorityOnly').value,
+          active:true,
+          created_by:profile.id
+        });
+        if(error) return toast(error.message);
+        toast('Announcement published');
+        closeModal();
+      };
+    }
+  }
+
+  function installAnnouncements(){
+    const btn=$('announcementsBtn');
+    if(btn) btn.onclick=showAnnouncements;
+  }
+
+  if(document.readyState==='loading') document.addEventListener('DOMContentLoaded',installAnnouncements);
+  else installAnnouncements();
+})();
 </script>
 </body>
 </html>
