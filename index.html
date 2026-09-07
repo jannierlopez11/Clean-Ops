@@ -253,6 +253,22 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
 #saveAssignment{min-height:48px!important;touch-action:manipulation!important}
 </style>
 
+
+<style id="v96-announcements">
+.announcement-menu-row{display:flex;align-items:center;gap:8px}
+.announcement-badge{display:inline-flex;align-items:center;justify-content:center;min-width:19px;height:19px;padding:0 5px;border-radius:10px;background:var(--gold);color:#0a0c11;font-size:11px;font-weight:800}
+.announcement-list{display:grid;gap:0}
+.announcement-item{padding:13px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.announcement-item:last-child{border-bottom:0}
+.announcement-title{font-weight:750;font-size:15px}
+.announcement-meta{font-size:12px;opacity:.68;margin-top:4px}
+.announcement-body{font-size:14px;line-height:1.5;margin-top:8px;white-space:pre-wrap}
+.announcement-compose{display:grid;gap:10px;margin-top:12px}
+.announcement-compose textarea{min-height:110px;resize:vertical}
+.announcement-compose input,.announcement-compose textarea,.announcement-compose select{width:100%;box-sizing:border-box}
+#announcementsBtn,#publishAnnouncement{min-height:48px!important;touch-action:manipulation!important}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -289,6 +305,11 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
         <button class="btn secondary" id="langEn">English</button>
         <button class="btn secondary" id="langEs">Español</button>
       </div>
+    </div>
+    <div class="card">
+      <h3>UPDATES</h3>
+      <button class="btn secondary" id="announcementsBtn" type="button">Announcements</button>
+      <span id="announcementMenuBadge" class="announcement-badge" style="display:none">0</span>
     </div>
     <div class="card">
       <h3>ACCOUNT</h3>
@@ -890,6 +911,123 @@ boot();
     };
   };
 })();
+</script>
+
+
+<script type="module" id="v96-announcements-module">
+import { createClient as createAnnouncementsClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+const annSupabase=createAnnouncementsClient(
+  'https://uwfoqbyejrfrgiwftvli.supabase.co',
+  'sb_publishable_fKXaIcoTfnQ8joXp3VM_YA_1u82btt1'
+);
+const ann$=id=>document.getElementById(id);
+const annEsc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]));
+
+async function annProfile(){
+  const {data:{user}}=await annSupabase.auth.getUser();
+  if(!user)return null;
+  const {data}=await annSupabase.from('profiles').select('id,full_name,role,active').eq('id',user.id).maybeSingle();
+  return data||null;
+}
+
+async function getAnnouncements(){
+  const p=await annProfile();
+  if(!p||p.active===false)return {profile:p,items:[]};
+  const {data,error}=await annSupabase.from('announcements')
+    .select('id,title,body,audience,priority,created_at,created_by')
+    .eq('active',true)
+    .order('created_at',{ascending:false});
+  if(error){
+    console.error('Announcements:',error);
+    return {profile:p,items:[],error};
+  }
+  const items=(data||[]).filter(a=>{
+    if(a.audience==='everyone')return true;
+    if(a.audience==='employees')return p.role==='employee';
+    if(a.audience==='managers')return p.role==='manager'||p.role==='owner';
+    return true;
+  });
+  return {profile:p,items};
+}
+
+async function showAnnouncements(){
+  const {profile,items,error}=await getAnnouncements();
+  if(!profile)return;
+  const rows=items.length?items.map(a=>`
+    <div class="announcement-item">
+      <div class="announcement-title">${annEsc(a.title)}</div>
+      <div class="announcement-meta">${String(a.priority||'normal').toUpperCase()} • ${new Date(a.created_at).toLocaleDateString()}</div>
+      <div class="announcement-body">${annEsc(a.body)}</div>
+    </div>`).join(''):`<div class="muted">No announcements yet.</div>`;
+
+  let ownerForm='';
+  if(profile.role==='owner'){
+    ownerForm=`
+      <div class="announcement-compose">
+        <input id="annTitle96" placeholder="Announcement title">
+        <textarea id="annBody96" placeholder="Write your announcement..."></textarea>
+        <select id="annAudience96">
+          <option value="everyone">Everyone</option>
+          <option value="employees">Employees</option>
+          <option value="managers">Managers</option>
+        </select>
+        <select id="annPriority96">
+          <option value="normal">Normal</option>
+          <option value="important">Important</option>
+          <option value="urgent">Urgent</option>
+        </select>
+        <button class="btn gold" id="publishAnnouncement96" type="button">Publish Announcement</button>
+      </div>`;
+  }
+
+  const modal=document.getElementById('modal');
+  const title=document.getElementById('modalTitle');
+  const body=document.getElementById('modalBody');
+  if(modal&&title&&body){
+    title.textContent='ANNOUNCEMENTS';
+    body.innerHTML=ownerForm+`<div class="announcement-list" style="margin-top:14px">${rows}</div>`;
+    modal.classList.add('open');
+  }
+
+  const publish=document.getElementById('publishAnnouncement96');
+  if(publish){
+    publish.onclick=async()=>{
+      const t=document.getElementById('annTitle96').value.trim();
+      const b=document.getElementById('annBody96').value.trim();
+      if(!t||!b){alert('Please enter a title and message.');return;}
+      const {error}=await annSupabase.from('announcements').insert({
+        title:t,body:b,
+        audience:document.getElementById('annAudience96').value,
+        priority:document.getElementById('annPriority96').value,
+        active:true,created_by:profile.id
+      });
+      if(error){alert(error.message);return;}
+      if(typeof closeModal==='function')closeModal();else modal.classList.remove('open');
+      await updateAnnouncementBadge();
+    };
+  }
+}
+
+async function updateAnnouncementBadge(){
+  const {items}=await getAnnouncements();
+  const badge=document.getElementById('announcementMenuBadge');
+  if(badge){
+    badge.textContent=String(items.length);
+    badge.style.display=items.length?'inline-flex':'none';
+  }
+}
+
+function installAnnouncementUI(){
+  const btn=document.getElementById('announcementsBtn');
+  if(btn)btn.onclick=showAnnouncements;
+  updateAnnouncementBadge();
+}
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',installAnnouncementUI);
+}else{
+  installAnnouncementUI();
+}
 </script>
 
 </body>
