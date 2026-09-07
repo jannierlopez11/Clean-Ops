@@ -280,6 +280,25 @@ p{font-size:12px;line-height:1.45;color:var(--muted);margin:6px 0}
 #mainAnnouncementsBtn{min-height:42px!important;touch-action:manipulation!important}
 </style>
 
+
+<style id="v98-daily-job">
+.daily-job{
+  border:1px solid rgba(216,180,91,.24);
+  background:linear-gradient(145deg,rgba(216,180,91,.08),rgba(255,255,255,.025));
+}
+.daily-job-grid{display:grid;gap:10px}
+.daily-job-meta{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.daily-job-label{font-size:11px;letter-spacing:.08em;opacity:.65;text-transform:uppercase}
+.daily-job-value{font-size:15px;font-weight:700;margin-top:2px}
+.daily-status{display:inline-flex;align-items:center;gap:7px;font-size:13px;font-weight:700}
+.daily-dot{width:9px;height:9px;border-radius:50%;background:#777}
+.daily-dot.on{background:#55c878}
+.daily-job-actions{display:grid;grid-template-columns:1fr;gap:9px;margin-top:8px}
+.daily-job-actions button{min-height:50px!important;touch-action:manipulation!important}
+.daily-time{font-variant-numeric:tabular-nums}
+@media(min-width:520px){.daily-job-actions{grid-template-columns:1fr 1fr}}
+</style>
+
 </head>
 <body>
 <div class="app">
@@ -1091,6 +1110,169 @@ if(document.readyState==='loading'){
 }else{
   installAnnouncementUI();
 }
+</script>
+
+
+<script id="v98-daily-job-js">
+(function(){
+  async function getCurrentProfile98(){
+    if(typeof supabase==='undefined') return null;
+    const {data:{user}}=await supabase.auth.getUser();
+    if(!user)return null;
+    const {data}=await supabase.from('profiles')
+      .select('id,full_name,role,active')
+      .eq('id',user.id).maybeSingle();
+    return data||null;
+  }
+
+  function todayLocal98(){
+    const d=new Date();
+    return d.toISOString().slice(0,10);
+  }
+
+  async function ensureTodayJob98(profile){
+    const today=todayLocal98();
+    const dow=new Date(today+'T12:00:00').getDay();
+
+    // Employee has access to all active restaurants. The schedule selects
+    // today's restaurant; no recurring employee-to-restaurant assignment is required.
+    const {data:restaurant,error:re}=await supabase.from('restaurants')
+      .select('*').eq('active',true).eq('weekday',dow)
+      .order('name').limit(1).maybeSingle();
+
+    if(re||!restaurant)return {restaurant:null,assignment:null};
+
+    let {data:assignment,error:ae}=await supabase.from('employee_assignments')
+      .select('*')
+      .eq('employee_id',profile.id)
+      .eq('restaurant_id',restaurant.id)
+      .eq('work_date',today)
+      .limit(1).maybeSingle();
+
+    if(ae)return {restaurant,assignment:null,error:ae};
+
+    if(!assignment){
+      const ins=await supabase.from('employee_assignments').insert({
+        employee_id:profile.id,
+        restaurant_id:restaurant.id,
+        work_date:today,
+        status:'assigned'
+      }).select('*').single();
+      if(!ins.error)assignment=ins.data;
+      else return {restaurant,assignment:null,error:ins.error};
+    }
+    return {restaurant,assignment};
+  }
+
+  async function renderDailyJob98(){
+    const profile=await getCurrentProfile98();
+    if(!profile || profile.role!=='employee' || profile.active===false)return;
+
+    const content=document.getElementById('content');
+    if(!content)return;
+
+    const result=await ensureTodayJob98(profile);
+    const old=document.getElementById('dailyJob98');
+    if(old)old.remove();
+
+    const wrap=document.createElement('section');
+    wrap.id='dailyJob98';
+    wrap.className='card daily-job';
+
+    if(!result.restaurant){
+      wrap.innerHTML=`
+        <div class="eyebrow">TODAY'S SERVICE</div>
+        <h3>No service scheduled today</h3>
+        <div class="muted">There is no active restaurant scheduled for today.</div>`;
+      content.prepend(wrap);
+      return;
+    }
+
+    const r=result.restaurant, a=result.assignment;
+    const dayNames98=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+    const timeLabel=(typeof fmtTime==='function')?fmtTime(r.start_time):(r.start_time||'');
+    const status=a?.status||'assigned';
+
+    // Pull today's time entry for this employee/job.
+    const {data:entry}=await supabase.from('time_entries')
+      .select('*')
+      .eq('employee_id',profile.id)
+      .eq('restaurant_id',r.id)
+      .eq('work_date',todayLocal98())
+      .order('clock_in',{ascending:false})
+      .limit(1).maybeSingle();
+
+    const clocked=!!entry?.clock_in && !entry?.clock_out;
+
+    wrap.innerHTML=`
+      <div class="eyebrow">TODAY'S SERVICE</div>
+      <h3>${typeof esc==='function'?esc(r.name):r.name}</h3>
+      <div class="daily-job-grid">
+        <div class="daily-job-meta">
+          <div><div class="daily-job-label">Schedule</div><div class="daily-job-value">${dayNames98[r.weekday]||''} • ${timeLabel}</div></div>
+          <div><div class="daily-job-label">Status</div><div class="daily-status"><span class="daily-dot ${clocked?'on':''}"></span>${clocked?'Clocked in':'Ready to clock in'}</div></div>
+        </div>
+        ${clocked?`<div class="daily-job-label">Clocked in at <span class="daily-job-value daily-time">${new Date(entry.clock_in).toLocaleTimeString([], {hour:'numeric',minute:'2-digit'})}</span></div>`:''}
+        <div class="daily-job-actions">
+          <button class="btn gold" id="dailyClock98" type="button">${clocked?'Clock Out':'Clock In'}</button>
+          <button class="btn secondary" id="dailyChecklist98" type="button">Open Checklist</button>
+        </div>
+      </div>`;
+
+    const clock=document.getElementById('dailyClock98');
+    const checklist=document.getElementById('dailyChecklist98');
+
+    if(clock){
+      clock.onclick=async()=>{
+        clock.disabled=true;
+        if(!clocked){
+          const {error}=await supabase.from('time_entries').insert({
+            employee_id:profile.id,
+            restaurant_id:r.id,
+            work_date:todayLocal98(),
+            clock_in:new Date().toISOString()
+          });
+          if(error)alert(error.message);
+          else if(typeof render==='function')await render();
+        }else{
+          const {error}=await supabase.from('time_entries').update({
+            clock_out:new Date().toISOString()
+          }).eq('id',entry.id);
+          if(error)alert(error.message);
+          else if(typeof render==='function')await render();
+        }
+        clock.disabled=false;
+      };
+    }
+
+    if(checklist){
+      checklist.onclick=()=>{
+        const target=document.querySelector('[data-screen="home-checklist"],#checklistBtn,#startChecklistBtn');
+        if(target)target.click();
+        else if(typeof toast==='function')toast('Checklist is ready for today.');
+      };
+    }
+
+    content.prepend(wrap);
+  }
+
+  // Run after the app has rendered its normal Home screen. A MutationObserver
+  // catches navigation/rerenders without replacing existing app functions.
+  function install98(){
+    const content=document.getElementById('content');
+    if(!content)return;
+    let queued=false;
+    const schedule=()=>{
+      if(queued)return;
+      queued=true;
+      setTimeout(()=>{queued=false;renderDailyJob98()},120);
+    };
+    new MutationObserver(schedule).observe(content,{childList:true,subtree:false});
+    setTimeout(renderDailyJob98,250);
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install98);
+  else install98();
+})();
 </script>
 
 </body>
