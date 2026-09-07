@@ -729,5 +729,136 @@ $('logoutBtn').onclick=async()=>{await supabase.auth.signOut();location.reload()
 supabase.auth.onAuthStateChange(async(_event,s)=>{session=s;if(!s){profile=null;loginScreen()}});
 boot();
 </script>
+
+<style id="v93-employee-workflow">
+/* v9.3 — employee daily workflow polish; preserves v9.2 visual design */
+.employee-service-card{
+  border:1px solid rgba(216,180,91,.24);
+  background:linear-gradient(145deg,rgba(216,180,91,.08),rgba(255,255,255,.025));
+}
+.workflow-note{
+  margin-top:10px;
+  padding:11px 12px;
+  border-radius:12px;
+  background:rgba(255,255,255,.035);
+  border:1px solid rgba(255,255,255,.07);
+  font-size:13px;
+  line-height:1.45;
+}
+#clockBtn,#completeBtn{
+  min-height:48px!important;
+  touch-action:manipulation!important;
+}
+.task{
+  min-height:46px!important;
+  padding:10px 8px!important;
+}
+.task input{
+  width:22px!important;
+  height:22px!important;
+  flex:0 0 22px!important;
+}
+</style>
+<script id="v93-employee-workflow">
+(function(){
+  const originalRenderHome = window.renderHome;
+  if(typeof originalRenderHome !== 'function') return;
+
+  // This wrapper runs after the existing v9.2 home renderer and only changes
+  // the employee presentation/flow. Supabase persistence remains unchanged.
+  window.renderHome = async function(){
+    await originalRenderHome();
+
+    if(!window.profile || window.profile.role !== 'employee') return;
+
+    const card = document.querySelector('#content .card.gold');
+    if(!card) return;
+
+    const clockBtn = document.getElementById('clockBtn');
+    const taskChecks = Array.from(document.querySelectorAll('[data-task]'));
+    const completeBtn = document.getElementById('completeBtn');
+    const clocked = !!clockBtn && /clock.?out/i.test(clockBtn.textContent || '');
+
+    // Add a clear instruction before the checklist when the employee has
+    // not started the service yet.
+    const checklistCard = Array.from(document.querySelectorAll('#content .card')).find(el =>
+      el.querySelector('.progress') && el.querySelector('[data-task]')
+    );
+
+    if(checklistCard && !clocked){
+      const note=document.createElement('div');
+      note.className='workflow-note';
+      note.innerHTML='<strong>Service not started</strong><br>Clock in above to begin today\\'s cleaning checklist.';
+      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',note);
+      taskChecks.forEach(x=>x.disabled=true);
+      if(completeBtn) completeBtn.disabled=true;
+    }
+
+    // Once clocked in, make the workflow state explicit.
+    if(checklistCard && clocked){
+      const note=document.createElement('div');
+      note.className='workflow-note';
+      note.innerHTML='<strong>Service in progress</strong><br>Complete every checklist item before finishing the job.';
+      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',note);
+    }
+
+    // Prevent accidental clock-out before all checklist items are complete.
+    if(clockBtn && clocked){
+      clockBtn.addEventListener('click',function(e){
+        const incomplete=taskChecks.some(x=>!x.checked);
+        if(incomplete){
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          if(typeof toast==='function') toast('Finish the checklist before clocking out.');
+        }
+      },true);
+    }
+  };
+})();
+</script>
+
+<script id="v93-post-render-hook">
+(function(){
+  function employeePostRender(){
+    if(typeof profile==='undefined' || profile?.role!=='employee') return;
+    const content=document.getElementById('content');
+    if(!content) return;
+
+    const clockBtn=document.getElementById('clockBtn');
+    const checks=[...content.querySelectorAll('[data-task]')];
+    const complete=document.getElementById('completeBtn');
+    const clocked=!!clockBtn && /clock.?out/i.test(clockBtn.textContent||'');
+
+    const checklistCard=[...content.querySelectorAll('.card')].find(x=>x.querySelector('.progress')&&x.querySelector('[data-task]'));
+    if(!checklistCard) return;
+
+    if(!clocked){
+      checks.forEach(x=>x.disabled=true);
+      if(complete) complete.disabled=true;
+      if(!checklistCard.querySelector('.workflow-note')){
+        const n=document.createElement('div');
+        n.className='workflow-note';
+        n.innerHTML='<strong>Service not started</strong><br>Clock in above to begin today\\'s cleaning checklist.';
+        checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',n);
+      }
+    }else if(!checklistCard.querySelector('.workflow-note')){
+      const n=document.createElement('div');
+      n.className='workflow-note';
+      n.innerHTML='<strong>Service in progress</strong><br>Complete every checklist item before finishing the job.';
+      checklistCard.querySelector('.progress')?.insertAdjacentElement('beforebegin',n);
+    }
+  }
+
+  const oldRender=window.render;
+  if(typeof oldRender==='function'){
+    window.render=async function(){
+      const result=await oldRender.apply(this,arguments);
+      setTimeout(employeePostRender,0);
+      return result;
+    };
+  }
+})();
+</script>
+
 </body>
 </html>
