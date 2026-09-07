@@ -457,11 +457,25 @@ async function loadToday(){
  const t=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
  tasks=t.data||[];
  if(!tasks.length){
-   const temp=await supabase.from('task_templates').select('name').eq('active',true).order('sort_order');
-   if(temp.data?.length){
-     await supabase.from('checklist_tasks').insert(temp.data.map(x=>({assignment_id:assignment.id,task_name:x.name,completed:false})));
-     const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
-     tasks=tt.data||[];
+   const cfg=await supabase.from('restaurant_checklist_config').select('checklist_item_id,sort_order').eq('restaurant_id',r.id).eq('active',true).order('sort_order');
+   const ids=(cfg.data||[]).map(x=>x.checklist_item_id);
+   if(ids.length){
+     const it=await supabase.from('checklist_items').select('id,name').in('id',ids).eq('active',true);
+     const byId=new Map((it.data||[]).map(x=>[x.id,x.name]));
+     const names=(cfg.data||[]).map(x=>byId.get(x.checklist_item_id)).filter(Boolean);
+     if(names.length){
+       await supabase.from('checklist_tasks').insert(names.map(name=>({assignment_id:assignment.id,task_name:name,completed:false})));
+       const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
+       tasks=tt.data||[];
+     }
+   }
+   if(!tasks.length){
+     const temp=await supabase.from('task_templates').select('name').eq('active',true).order('sort_order');
+     if(temp.data?.length){
+       await supabase.from('checklist_tasks').insert(temp.data.map(x=>({assignment_id:assignment.id,task_name:x.name,completed:false})));
+       const tt=await supabase.from('checklist_tasks').select('id,task_name,completed,completed_at').eq('assignment_id',assignment.id).order('created_at');
+       tasks=tt.data||[];
+     }
    }
  }
  if(!isManagement()){
@@ -712,26 +726,65 @@ async function uploadPhotos(){
 }
 
 async function checklistManager(){
- const [c,i,s,b]=await Promise.all([
+ const [c,i,rc,b]=await Promise.all([
   supabase.from('checklist_categories').select('*').eq('active',true).order('sort_order'),
   supabase.from('checklist_items').select('*').eq('active',true).order('sort_order'),
-  supabase.from('checklist_subtasks').select('*').eq('active',true).order('sort_order'),
-  supabase.from('restaurant_bathrooms').select('*').eq('active',true)
+  supabase.from('restaurant_checklist_config').select('id,restaurant_id,checklist_item_id,active,sort_order'),
+  supabase.from('restaurant_bathrooms').select('*').eq('active',true).order('name')
  ]);
- const cats=c.data||[],items=i.data||[],subs=s.data||[],baths=b.data||[];
- openModal(T('checkSetup'),`
-  <p>Detailed checklist catalog is connected. Bathrooms remain mandatory on every service day.</p>
-  <div class="list">
-   ${cats.map(cat=>`<div class="checkcat"><button class="checkcathead" type="button"><b>${esc(cat.name)}</b><span>⌄</span></button>
-    <div class="checkcatbody">${items.filter(x=>x.category_id===cat.id).map(it=>`<div class="checkitem"><b>${esc(it.name)}</b>${it.description?`<small>${esc(it.description)}</small>`:''}${subs.filter(x=>x.item_id===it.id).map(st=>`<div class="subtask">${esc(st.name)}</div>`).join('')}</div>`).join('')||'<div class="subtask">No items configured.</div>'}</div>
-   </div>`).join('')}
-   <div class="checkcat open"><button class="checkcathead" type="button"><b>Bathrooms — Mandatory</b><span>⌄</span></button>
-    <div class="checkcatbody">${baths.length?baths.map(b=>`<div class="checkitem"><b>${esc(b.name||'Bathroom')}</b><small>${Number(b.toilet_count||0)} toilets • ${Number(b.urinal_count||0)} urinals • ${Number(b.sink_count||0)} sinks</small></div>`).join(''):'<div class="subtask">No bathroom configuration yet.</div>'}</div>
-   </div>
-  </div>`);
+ const cats=c.data||[],items=i.data||[],configs=rc.data||[],baths=b.data||[];
+ const activeRestaurants=restaurants.filter(r=>r.active!==false);
+ const rows=activeRestaurants.map(r=>{
+  const ids=configs.filter(x=>x.restaurant_id===r.id&&x.active!==false).map(x=>x.checklist_item_id);
+  const its=items.filter(x=>ids.includes(x.id));
+  const bathroomCount=baths.filter(x=>x.restaurant_id===r.id).length;
+  return `<div class="checkcat open"><button class="checkcathead" type="button"><b>${esc(r.name)}</b><span>${its.length} task${its.length===1?'':'s'}</span></button>
+   <div class="checkcatbody">
+    <div class="notice">${its.length?`${its.length} manager task${its.length===1?'':'s'} configured.`:'No manager tasks configured yet.'} Bathrooms are mandatory every service day${bathroomCount?` • ${bathroomCount} configured`:''}.</div>
+    ${its.map(it=>{const cfg=configs.find(x=>x.restaurant_id===r.id&&x.checklist_item_id===it.id&&x.active!==false);return `<div class="checkitem"><b>${esc(it.name)}</b>${it.description?`<small>${esc(it.description)}</small>`:''}<div class="rowmeta" style="margin-top:5px">MANDATORY • ${esc(cats.find(x=>x.id===it.category_id)?.name||'General')} <button class="btn small danger" data-remove-check="${cfg?.id||''}">Remove</button></div></div>`}).join('')}
+   </div></div>`;
+ }).join('');
+ openModal('CHECKLIST BUILDER',`
+  <div class="notice" style="margin-bottom:10px">Create the checklist employees must complete. Every task you add is <b>MANDATORY</b>. The checklist is saved to the selected restaurant.</div>
+  <div class="grid2">
+   <div class="field"><label>Restaurant<select id="cbRestaurant">${activeRestaurants.map(r=>`<option value="${r.id}">${esc(r.name)}</option>`).join('')}</select></label></div>
+   <div class="field"><label>Category<select id="cbCategory">${cats.map(c=>`<option value="${c.id}">${esc(c.name)}</option>`).join('')}</select></label></div>
+  </div>
+  <div class="field"><label>Task name<input id="cbTask" placeholder="Example: Mop all floors"></label></div>
+  <div class="field"><label>Description <span class="rowmeta">optional</span><textarea id="cbDesc" placeholder="What exactly should be done?"></textarea></label></div>
+  <button class="btn gold" id="cbSave">Add Mandatory Task</button>
+  <div class="sectionhead"><h2>CURRENT CHECKLISTS</h2></div>
+  <div class="list">${rows||`<div class="empty">No restaurants found.</div>`}</div>
+ `);
+ const save=$('cbSave');
+ if(save)save.onclick=async()=>{
+  const restaurant_id=$('cbRestaurant')?.value,category_id=$('cbCategory')?.value,name=$('cbTask')?.value.trim(),description=$('cbDesc')?.value.trim()||null;
+  if(!restaurant_id||!category_id||!name)return toast('Restaurant, category and task name are required');
+  const exists=await supabase.from('checklist_items').select('id').eq('name',name).eq('active',true).maybeSingle();
+  let itemId=exists.data?.id;
+  if(!itemId){
+   const max=items.reduce((m,x)=>Math.max(m,Number(x.sort_order)||0),0);
+   const ins=await supabase.from('checklist_items').insert({name,description,category_id,active:true,sort_order:max+1}).select('id').single();
+   if(ins.error)return toast(ins.error.message);itemId=ins.data.id;
+  }
+  const cfg=await supabase.from('restaurant_checklist_config').select('id,active').eq('restaurant_id',restaurant_id).eq('checklist_item_id',itemId).maybeSingle();
+  if(cfg.data){
+   if(cfg.data.active===false){const up=await supabase.from('restaurant_checklist_config').update({active:true}).eq('id',cfg.data.id);if(up.error)return toast(up.error.message);}
+   else return toast('That task is already on this restaurant checklist');
+  }else{
+   const maxCfg=configs.filter(x=>x.restaurant_id===restaurant_id).reduce((m,x)=>Math.max(m,Number(x.sort_order)||0),0);
+   const ins=await supabase.from('restaurant_checklist_config').insert({restaurant_id,checklist_item_id:itemId,active:true,sort_order:maxCfg+1});
+   if(ins.error)return toast(ins.error.message);
+  }
+  toast('Mandatory task added');await checklistManager();
+ };
+ document.querySelectorAll('[data-remove-check]').forEach(b=>b.onclick=async()=>{
+  const id=b.dataset.removeCheck;if(!id)return;
+  const {error}=await supabase.from('restaurant_checklist_config').update({active:false}).eq('id',id);
+  if(error)return toast(error.message);toast('Task removed');await checklistManager();
+ });
  document.querySelectorAll('.checkcathead').forEach(x=>x.onclick=()=>x.parentElement.classList.toggle('open'));
 }
-
 function openModal(title,body){$('modalTitle').textContent=title;$('modalBody').innerHTML=body;$('modal').classList.add('open')}
 function closeModal(){$('modal').classList.remove('open')}
 $('modalClose').onclick=closeModal;
